@@ -8,7 +8,7 @@ public class HelpCommand : ICommand
     private readonly User _user;
     private readonly CancellationToken _cancellationToken;
 
-    private const string HelpMessage = "Добро пожаловать в бота, который отправляет уведомления о новых научных статьях!" +
+    private const string HelpMessage = "Добро пожаловать в бота, который отправляет уведомления о новых научных статьях! " +
                                        "В боте доступны следующие команды:\n" +
                                        "/help - список доступных команд\n" +
                                        "/new - добавить новый запрос в рассылку\n" +
