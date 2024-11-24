@@ -2,5 +2,5 @@
 
 public interface ICommand
 {
-    // TODO
+    Task Execute();
 }

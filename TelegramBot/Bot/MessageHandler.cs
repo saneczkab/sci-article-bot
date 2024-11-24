@@ -1,22 +1,20 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.Json;
+using Bot.TelegramBot.Commands;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using Ninject;
+using Ninject.Parameters;
 
 namespace Bot.TelegramBot;
 
 public static class MessageHandler
 {
     private static readonly ConcurrentDictionary<long, User> Users = new(); // Временное решение, пока нет бд.
-    
-    private const string HelpMessage = "В боте доступны следующие команды:\n" +
-                                       "/help - список доступных команд\n" +
-                                       "/new - добавить новый запрос в рассылку\n" +
-                                       "/last - показать последние 5 опубликованных статей для запроса\n" +
-                                       "/remove - удалить из рассылки один из запросов\n";
+    private static readonly IKernel Kernel = new StandardKernel(new BotModule());
     
     public static readonly ReplyKeyboardMarkup CommandsKeyboard = new([
         [
@@ -65,55 +63,28 @@ public static class MessageHandler
     private static async Task SendResponse(ITelegramBotClient botClient, User user, Message message,
         CancellationToken cancellationToken)
     {
-        if (user.State.EnteringQuery)
-            await QueryCreator.GetText(botClient, user, message.Text!, cancellationToken);
-        else if (user.State.ConfirmingQuery)
-            await QueryCreator.GetConfirmation(botClient, user, message.Text!, cancellationToken);
-        else if (user.State.RemovingQuery)
-            await QueryRemover.GetText(botClient, user, message.Text!, cancellationToken);
-        else if (user.State.ConfirmingRemoval)
-            await QueryRemover.GetConfirmation(botClient, user, message.Text!, cancellationToken);
-        else if (user.State.EnteringQueryToSeeLastArticles)
-            await ArticlesGetter.GetText(botClient, user, message.Text!, cancellationToken);
-        else
+        var text = message.Text!;
+        var commandFactory = Kernel.Get<ICommandFactory>();
+
+        try
         {
-            await (message.Text switch
-            {
-                "/start" => SendGreetingMessage(botClient, user, cancellationToken),
-                "/help" => SendHelpMessage(botClient, user, cancellationToken),
-                "/new" => QueryCreator.Handle(botClient, user, cancellationToken),
-                "/last" => ArticlesGetter.Handle(botClient, user, cancellationToken),
-                "/remove" => QueryRemover.Handle(botClient, user, cancellationToken),
-                _ => botClient.SendMessage(chatId: user.Id,
-                    text: "Неизвестная команда. Для получения списка команд введите /help",
-                    replyMarkup: CommandsKeyboard, cancellationToken: cancellationToken)
-            });
+            var command = commandFactory.CreateCommand(user, text, cancellationToken);
+            await command.Execute();
+        }
+        catch (InvalidOperationException)
+        {
+            await botClient.SendMessage(chatId: user.Id, 
+                text: "Неизвестная команда. Для получения списка команд введите /help", 
+                replyMarkup: CommandsKeyboard, cancellationToken: cancellationToken);
         }
     }
+
 
     public static Task HandleError(ITelegramBotClient botClient, Exception exception,
         CancellationToken cancellationToken)
     {
         Console.WriteLine($"Error: {exception}");
         return Task.CompletedTask;
-    }
-    
-    private static async Task SendGreetingMessage(ITelegramBotClient botClient, User user,
-        CancellationToken cancellationToken)
-    {
-        const string text = "Добро пожаловать в SciArticleBot - бот для отслеживания новых научных статей.\n" +
-                            "Раз в сутки бот проверяет наличие новых статей в одобренных РЦНИ журналах " +
-                            "и отправляет Вам.\n" + HelpMessage;
-
-        await botClient.SendMessage(chatId: user.Id, text: text, replyMarkup: CommandsKeyboard,
-            cancellationToken: cancellationToken);
-    }
-    
-    private static async Task SendHelpMessage(ITelegramBotClient botClient, User user,
-        CancellationToken cancellationToken)
-    {
-        await botClient.SendMessage(chatId: user.Id, text: HelpMessage, replyMarkup: CommandsKeyboard,
-                cancellationToken: cancellationToken);
     }
 
     private static void AddUserToDatabase(long chatId)
@@ -153,54 +124,5 @@ public static class MessageHandler
             await botClient.SendMessage(chatId: user.Key, text: "Произошёл поиск новых статей...",
                 replyMarkup: CommandsKeyboard, cancellationToken: cancellationToken);
         }
-    }
-    
-    public static async Task SendLastArticles(ITelegramBotClient botClient, User user, string message,
-        CancellationToken cancellationToken)
-    {
-        await botClient.SendMessage(chatId: user.Id, text: "Идёт поиск статей...", 
-            cancellationToken: cancellationToken);
-        
-        var articles = GetLastArticles(message, 5);
-        if (articles.Count == 0)
-            await botClient.SendMessage(chatId: user.Id, text: "По вашему запросу не найдено статей",
-                replyMarkup: CommandsKeyboard, cancellationToken: cancellationToken);
-
-        var response = articles.Aggregate($"Последние статьи по запросу {message}:\n",
-            (current, article) => current + $"- [{article.Title}]({article.URL}) ({article.PublicationDate})\n");
-
-        await botClient.SendMessage(chatId: user.Id, text: response, 
-            parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: CommandsKeyboard,
-            cancellationToken: cancellationToken);
-    }
-
-    private static List<Article> GetLastArticles(string query, int maxArticles)
-    {
-        var scriptPath = Path.Combine(
-            AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "TempScripts", "scrapper.py");
-        var psi = new ProcessStartInfo
-        {
-            FileName = "python",
-            Arguments = $"\"{Path.GetFullPath(scriptPath)}\" \"{query}\" {maxArticles}",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-
-        using var process = Process.Start(psi);
-        var output = process.StandardOutput.ReadToEnd();
-        var error = process.StandardError.ReadToEnd();
-        process.WaitForExit();
-        Console.WriteLine(error);
-        var result = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(output);
-
-        return (from item in result
-            let title = item["title"].ToString()
-            let depositedDate =
-                DateTimeOffset.FromUnixTimeSeconds(long.Parse(item["deposited_date"].ToString())).DateTime
-            let issn = item["issn"].ToString()
-            let url = item["url"].ToString()
-            select new Article(title, DateOnly.FromDateTime(depositedDate), issn, url)).ToList();
     }
 }
