@@ -18,8 +18,12 @@ public class NewCommand : ICommand
         _user = user;
         _cancellationToken = cancellationToken;
         _message = message;
-        
-        if (_user.State.EnteringQuery)
+
+        if (_user.Queries.Count >= Bot.MaxQueries)
+            await _botClient.SendMessage(chatId: _user.Id, 
+                text: $"Вы не можете добавить больше {Bot.MaxQueries} запросов в рассылку.",
+                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+        else if (_user.State.EnteringQuery)
             await GetQueryText();
         else if (_user.State.ConfirmingQuery)
             await Confirm();

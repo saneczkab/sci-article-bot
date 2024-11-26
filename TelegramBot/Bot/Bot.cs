@@ -7,6 +7,7 @@ public static class Bot
 {
     private const string Token = "7377758210:AAEnYbnKCdZ5CNXzSxsN0XRl6iPZLs8BOdA";
     private static TelegramBotClient? _botClient;
+    public const int MaxQueries = 4;
     
     private static async Task Main()
     {

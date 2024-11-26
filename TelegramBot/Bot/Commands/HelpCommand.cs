@@ -13,19 +13,13 @@ public class HelpCommand : ICommand
         CancellationToken cancellationToken, string message)
     {
         var helpMessage = "Добро пожаловать в бота, который отправляет уведомления о новых научных статьях!\n" +
-                          "В боте доступны следующие команды:\n";
+                          $"Ограничение по максимальному числу запросов: {Bot.MaxQueries}.\n" +
+                          "В боте доступны следующие команды:\n\n";
         var commandMetadata = KernelHandler.Kernel.GetAll<ICommand>();
-        
-        foreach (var cmd in commandMetadata)
-        {
-            helpMessage += $"{cmd.Command} - {cmd.Description}\n";
-        }
+        helpMessage = commandMetadata
+            .Aggregate(helpMessage, (current, cmd) => current + $"{cmd.Command} - {cmd.Description}\n");
 
-        await botClient.SendMessage(
-            chatId: user.Id,
-            text: helpMessage,
-            replyMarkup: MessageHandler.CommandsKeyboard,
-            cancellationToken: cancellationToken
-        );
+        await botClient.SendMessage(chatId: user.Id, text: helpMessage, 
+            replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: cancellationToken);
     }
 }
