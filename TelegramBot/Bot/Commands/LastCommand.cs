@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using Bot.Bot;
+using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Bot.TelegramBot.Commands;
@@ -61,7 +62,7 @@ public class LastCommand : ICommand
         if (_message == "Отмена")
         {
             await _botClient.SendMessage(chatId:  _user.Id, text: "Просмотр статей отменен",
-                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
         else
         {
@@ -82,7 +83,7 @@ public class LastCommand : ICommand
             _user.State.EnteringMaxArticlesToSeeLast = false;
             _user.State.EnteringQueryToSeeLastArticles = false;
             await _botClient.SendMessage(chatId:  _user.Id, text: "Просмотр статей отменен",
-                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
         else if (int.TryParse(_message, out var maxArticles) && maxArticles is > 0 and <= 25)
         {

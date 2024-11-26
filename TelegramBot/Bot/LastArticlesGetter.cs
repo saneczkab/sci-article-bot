@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
+using Bot.Bot;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -17,7 +18,7 @@ public class LastArticlesGetter
         var articles = GetLastArticles(query, message);
         if (articles.Count == 0)
             await botClient.SendMessage(chatId: user.Id, text: "По вашему запросу не найдено статей",
-                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
         else
         {
             var response = articles.Aggregate($"Последние статьи по запросу {query}:\n", 
@@ -25,7 +26,7 @@ public class LastArticlesGetter
                     current + $"- [{article.Title}]({article.URL}) ({article.PublicationDate})\n");
 
             await botClient.SendMessage(chatId: user.Id, text: response, 
-                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: MessageHandler.CommandsKeyboard,
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: Keyboards.CommandsKeyboard,
                 cancellationToken: cancellationToken);
         }
     }

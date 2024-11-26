@@ -16,30 +16,6 @@ public static class MessageHandler
 {
     private static readonly ConcurrentDictionary<long, User> Users = new(); // Временное решение, пока нет бд.
 
-    public static readonly ReplyKeyboardMarkup CommandsKeyboard = new([
-        [
-            new KeyboardButton("/help"),
-            new KeyboardButton("/new"),
-            new KeyboardButton("/last"),
-            new KeyboardButton("/remove")
-        ]
-    ])
-    {
-        OneTimeKeyboard = true,
-        ResizeKeyboard = true
-    };
-    
-    public static readonly ReplyKeyboardMarkup ConfirmationKeyboard = new([
-        [
-            new KeyboardButton("Да"),
-            new KeyboardButton("Нет")
-        ]
-    ])
-    {
-        OneTimeKeyboard = true,
-        ResizeKeyboard = true
-    };
-
     public static async Task HandleUpdate(ITelegramBotClient botClient, Update update,
         CancellationToken cancellationToken)
     {
@@ -75,7 +51,7 @@ public static class MessageHandler
         {
             await botClient.SendMessage(chatId: user.Id, 
                 text: "Неизвестная команда. Для получения списка команд введите /help", 
-                replyMarkup: CommandsKeyboard, cancellationToken: cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
         }
     }
 
@@ -122,7 +98,7 @@ public static class MessageHandler
         foreach (var user in Users)
         {
             await botClient.SendMessage(chatId: user.Key, text: "Произошёл поиск новых статей...",
-                replyMarkup: CommandsKeyboard, cancellationToken: cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
         }
     }
 }

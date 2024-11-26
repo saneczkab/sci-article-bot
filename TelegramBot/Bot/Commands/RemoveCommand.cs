@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using Bot.Bot;
+using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Bot.TelegramBot.Commands;
@@ -38,19 +39,19 @@ public class RemoveCommand : ICommand
         if (_message == "Отмена")
         {
             await _botClient.SendMessage(chatId: _user.Id, text: "Удаление запроса отменено",
-                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
         else if (query is null)
         {
             await _botClient.SendMessage(chatId: _user.Id, text: $"Запрос \"{_message}\" не найден",
-                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
         else
         {
             _user.State.ConfirmingRemoval = true;
             _user.State.ProcessingQuery = query;
             await _botClient.SendMessage(chatId: _user.Id, text: $"Удалить запрос \"{query}\"?",
-                replyMarkup: MessageHandler.ConfirmationKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.ConfirmationKeyboard, cancellationToken: _cancellationToken);
         }
 
         MessageHandler.UpdateUserInDatabase(_user);
@@ -66,12 +67,12 @@ public class RemoveCommand : ICommand
         {
             _user.Queries.Remove(query!);
             await _botClient.SendMessage(chatId: _user.Id, text: $"Запрос \"{query}\" удален",
-                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
         else
         {
             await _botClient.SendMessage(chatId: _user.Id, text: $"Запрос \"{query}\" не будет удален",
-                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
     }
     
@@ -91,7 +92,7 @@ public class RemoveCommand : ICommand
         if (queriesMessage.Length == 0)
         {
             await _botClient.SendMessage(chatId: _user.Id, text: "У Вас нет запросов в рассылке",
-                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
         else
         {

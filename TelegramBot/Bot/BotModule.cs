@@ -11,10 +11,9 @@ public class BotModule : NinjectModule
     {
         Bind<ICommandFactory>().To<CommandFactory>().InSingletonScope();
 
-        var commandTypes = Assembly.GetExecutingAssembly().GetTypes()
-            .Where(t => typeof(ICommand).IsAssignableFrom(t) && t is { IsInterface: false, IsAbstract: false });
-
-        foreach (var commandType in commandTypes)
-            Bind(typeof(ICommand)).To(commandType);
+        Bind<ICommand>().To<HelpCommand>();
+        Bind<ICommand>().To<NewCommand>();
+        Bind<ICommand>().To<LastCommand>();
+        Bind<ICommand>().To<RemoveCommand>();
     }
 }

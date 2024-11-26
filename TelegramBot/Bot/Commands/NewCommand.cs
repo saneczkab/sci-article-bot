@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using Bot.Bot;
+using Telegram.Bot;
 
 namespace Bot.TelegramBot.Commands;
 
@@ -23,7 +24,7 @@ public class NewCommand : ICommand
         if (_user.Queries.Count >= Bot.MaxQueries)
             await _botClient.SendMessage(chatId: _user.Id, 
                 text: $"Вы не можете добавить больше {Bot.MaxQueries} запросов в рассылку.",
-                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         else if (_user.State.EnteringQuery)
             await GetQueryText();
         else if (_user.State.ConfirmingQuery)
@@ -45,13 +46,13 @@ public class NewCommand : ICommand
         if (_user.Queries.Contains(query))
         {
             await _botClient.SendMessage(chatId: _user.Id, text: $"Запрос \"{query}\" уже есть в рассылке",
-                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
         else if (_message.Equals("отмена", StringComparison.CurrentCultureIgnoreCase))
         {
             await _botClient.SendMessage(chatId: _user.Id, 
                 text: $"Добавление запроса \"{query}\" по техническим причинам невозможно.",
-                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
         else
         {
@@ -59,7 +60,7 @@ public class NewCommand : ICommand
             _user.State.ProcessingQuery = query;
             await LastArticlesGetter.SendLastArticles(_botClient, _user, 5, _cancellationToken);
             await _botClient.SendMessage(chatId: _user.Id, text: $"Вы хотите добавить запрос '{query}' в рассылку?", 
-                replyMarkup: MessageHandler.ConfirmationKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.ConfirmationKeyboard, cancellationToken: _cancellationToken);
         }
         
         MessageHandler.UpdateUserInDatabase(_user);
@@ -72,13 +73,13 @@ public class NewCommand : ICommand
             _user.Queries.Add(_user.State.ProcessingQuery);
             _user.State.ConfirmingQuery = false;
             await _botClient.SendMessage(chatId: _user.Id, text: "Запрос добавлен в рассылку.", 
-                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
         else
         {
             _user.State.ConfirmingQuery = false;
             await _botClient.SendMessage(chatId: _user.Id, text: "Запрос не был добавлен.", 
-                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
         
         MessageHandler.UpdateUserInDatabase(_user);

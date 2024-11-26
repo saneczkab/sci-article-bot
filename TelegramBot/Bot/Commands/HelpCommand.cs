@@ -22,6 +22,6 @@ public class HelpCommand : ICommand
             .Aggregate(helpMessage, (current, cmd) => current + $"{cmd.Command} - {cmd.Description}\n");
 
         await botClient.SendMessage(chatId: user.Id, text: helpMessage, 
-            replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: cancellationToken);
+            replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
     }
 }
