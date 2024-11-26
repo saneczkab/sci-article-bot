@@ -12,9 +12,9 @@ public class BotModule : NinjectModule
         Bind<ITelegramBotClient>().ToMethod(_ => 
             new TelegramBotClient("7377758210:AAEnYbnKCdZ5CNXzSxsN0XRl6iPZLs8BOdA")).InSingletonScope();
         
-        Bind<HelpCommand>().ToSelf();
-        Bind<NewCommand>().ToSelf();
-        Bind<LastCommand>().ToSelf();
-        Bind<RemoveCommand>().ToSelf();
+        Bind<ICommand>().To<HelpCommand>();
+        Bind<ICommand>().To<NewCommand>();
+        Bind<ICommand>().To<LastCommand>();
+        Bind<ICommand>().To<RemoveCommand>();
     }
 }

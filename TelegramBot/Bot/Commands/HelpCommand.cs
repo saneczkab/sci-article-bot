@@ -1,30 +1,31 @@
-﻿using Telegram.Bot;
+﻿using Bot.Bot;
+using Ninject;
+using Telegram.Bot;
 
 namespace Bot.TelegramBot.Commands;
 
 public class HelpCommand : ICommand
 {
-    private readonly ITelegramBotClient _botClient;
-    private readonly User _user;
-    private readonly CancellationToken _cancellationToken;
+    public string Command => "/help";
+    public string Description => "показать список доступных команд";
 
-    private const string HelpMessage = "Добро пожаловать в бота, который отправляет уведомления о новых научных статьях! " +
-                                       "В боте доступны следующие команды:\n" +
-                                       "/help - список доступных команд\n" +
-                                       "/new - добавить новый запрос в рассылку\n" +
-                                       "/last - показать последние 5 опубликованных статей для запроса\n" +
-                                       "/remove - удалить из рассылки один из запросов\n";
-
-    public HelpCommand(ITelegramBotClient botClient, User user, CancellationToken cancellationToken)
+    public async Task Execute(ITelegramBotClient botClient, User user, 
+        CancellationToken cancellationToken, string message)
     {
-        _botClient = botClient;
-        _user = user;
-        _cancellationToken = cancellationToken;
-    }
+        var helpMessage = "Добро пожаловать в бота, который отправляет уведомления о новых научных статьях!\n" +
+                          "В боте доступны следующие команды:\n";
+        var commandMetadata = KernelHandler.Kernel.GetAll<ICommand>();
+        
+        foreach (var cmd in commandMetadata)
+        {
+            helpMessage += $"{cmd.Command} - {cmd.Description}\n";
+        }
 
-    public async Task Execute()
-    {
-        await _botClient.SendMessage(chatId: _user.Id, text: HelpMessage, 
-            replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+        await botClient.SendMessage(
+            chatId: user.Id,
+            text: helpMessage,
+            replyMarkup: MessageHandler.CommandsKeyboard,
+            cancellationToken: cancellationToken
+        );
     }
 }

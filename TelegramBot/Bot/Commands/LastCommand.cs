@@ -5,21 +5,21 @@ namespace Bot.TelegramBot.Commands;
 
 public class LastCommand : ICommand
 {
-    private readonly ITelegramBotClient _botClient;
-    private readonly User _user;
-    private readonly string _message;
-    private readonly CancellationToken _cancellationToken;
-
-    public LastCommand(ITelegramBotClient botClient, User user, string message, CancellationToken cancellationToken)
+    private ITelegramBotClient _botClient;
+    private User _user;
+    private CancellationToken _cancellationToken;
+    private string _message;
+    public string Command => "/last";
+    public string Description => "показать последние 5 статей по запросу";
+    
+    public async Task Execute(ITelegramBotClient botClient, User user, 
+        CancellationToken cancellationToken, string message)
     {
         _botClient = botClient;
         _user = user;
-        _message = message;
         _cancellationToken = cancellationToken;
-    }
-    
-    public async Task Execute()
-    {
+        _message = message;
+        
         if (_user.State.EnteringQueryToSeeLastArticles)
             await SendLastArticles();
         else

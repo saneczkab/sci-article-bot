@@ -1,6 +1,11 @@
-﻿namespace Bot.TelegramBot.Commands;
+﻿using Telegram.Bot;
+
+namespace Bot.TelegramBot.Commands;
 
 public interface ICommand
 {
-    Task Execute();
+    string Command { get; }
+    string Description { get; }
+    
+    Task Execute(ITelegramBotClient botClient, User user, CancellationToken cancellationToken, string message);
 }

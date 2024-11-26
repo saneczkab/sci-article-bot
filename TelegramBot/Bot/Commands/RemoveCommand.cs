@@ -5,21 +5,21 @@ namespace Bot.TelegramBot.Commands;
 
 public class RemoveCommand : ICommand
 {
-    private readonly ITelegramBotClient _botClient;
-    private readonly User _user;
-    private readonly string _message;
-    private readonly CancellationToken _cancellationToken;
-
-    public RemoveCommand(ITelegramBotClient botClient, User user, string message, CancellationToken cancellationToken)
+    private ITelegramBotClient _botClient;
+    private User _user;
+    private string _message;
+    private CancellationToken _cancellationToken;
+    public string Command => "/remove";
+    public string Description => "удалить запрос из рассылки";
+    
+    public async Task Execute(ITelegramBotClient botClient, User user, 
+        CancellationToken cancellationToken, string message)
     {
         _botClient = botClient;
         _user = user;
-        _message = message;
         _cancellationToken = cancellationToken;
-    }
-    
-    public async Task Execute()
-    {
+        _message = message;
+        
         if (_user.State.RemovingQuery)
             await GetQueryText();
         else if (_user.State.ConfirmingRemoval)

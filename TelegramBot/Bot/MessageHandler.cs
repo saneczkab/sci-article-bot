@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.Json;
+using Bot.Bot;
 using Bot.TelegramBot.Commands;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -14,8 +15,7 @@ namespace Bot.TelegramBot;
 public static class MessageHandler
 {
     private static readonly ConcurrentDictionary<long, User> Users = new(); // Временное решение, пока нет бд.
-    private static readonly IKernel Kernel = new StandardKernel(new BotModule());
-    
+
     public static readonly ReplyKeyboardMarkup CommandsKeyboard = new([
         [
             new KeyboardButton("/help"),
@@ -64,12 +64,12 @@ public static class MessageHandler
         CancellationToken cancellationToken)
     {
         var text = message.Text!;
-        var commandFactory = Kernel.Get<ICommandFactory>();
+        var commandFactory = KernelHandler.Kernel.Get<CommandFactory>();
 
         try
         {
             var command = commandFactory.CreateCommand(user, text, cancellationToken);
-            await command.Execute();
+            await command.Execute(botClient, user, cancellationToken, text);
         }
         catch (InvalidOperationException)
         {
