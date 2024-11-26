@@ -6,8 +6,8 @@ public class Article
     public DateOnly PublicationDate { get; set; }
     public string JournalISSN { get; set; }
     public string URL { get; set; }
-    
-    public Article(string title, DateOnly publicationDate ,string journalISSN, string url)
+
+    public Article(string title, DateOnly publicationDate, string journalISSN, string url)
     {
         Title = title;
         PublicationDate = publicationDate;

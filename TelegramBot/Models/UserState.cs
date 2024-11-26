@@ -8,5 +8,5 @@ public class UserState
     public bool ConfirmingRemoval { get; set; }
     public bool EnteringQueryToSeeLastArticles { get; set; }
     public bool EnteringMaxArticlesToSeeLast { get; set; }
-    public Query? ProcessingQuery { get; set; } 
+    public Query? ProcessingQuery { get; set; }
 }

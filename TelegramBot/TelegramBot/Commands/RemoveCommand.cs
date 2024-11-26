@@ -14,15 +14,15 @@ public class RemoveCommand : ICommand
     public string Command => "/remove";
     public string Name => "Удалить запрос";
     public string Description => "удалить запрос из рассылки";
-    
-    public async Task Execute(ITelegramBotClient botClient, User user, 
+
+    public async Task Execute(ITelegramBotClient botClient, User user,
         CancellationToken cancellationToken, string message)
     {
         _botClient = botClient;
         _user = user;
         _cancellationToken = cancellationToken;
         _message = message;
-        
+
         if (_user.State.RemovingQuery)
             await GetQueryText();
         else if (_user.State.ConfirmingRemoval)
@@ -57,7 +57,7 @@ public class RemoveCommand : ICommand
 
         MessageHandler.UpdateUserInDatabase(_user);
     }
-    
+
     private async Task Confirm()
     {
         _user.State.ConfirmingRemoval = false;
@@ -76,7 +76,7 @@ public class RemoveCommand : ICommand
                 replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
     }
-    
+
     private async Task SendUserQueries()
     {
         var queries = _user.Queries;

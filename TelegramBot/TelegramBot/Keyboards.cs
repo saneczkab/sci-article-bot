@@ -20,7 +20,7 @@ public static class Keyboards
             };
         }
     }
-    
+
     public static ReplyKeyboardMarkup ConfirmationKeyboard => new([
         [
             new KeyboardButton("Да"),

@@ -16,9 +16,9 @@ public static class MessageHandler
         CancellationToken cancellationToken)
     {
         var message = update.Message;
-        if (message is null) 
+        if (message is null)
             return;
-        
+
         var chatId = message.Chat.Id;
         var user = GetUserFromDatabase(chatId);
 
@@ -61,10 +61,10 @@ public static class MessageHandler
         var isUserExists = Users.TryGetValue(chatId, out _);
         if (!isUserExists)
             AddUserToDatabase(chatId);
-        
+
         return Users[chatId];
     }
-    
+
     public static void UpdateUserInDatabase(User user)
     {
         // Временное решение, пока нет бд
