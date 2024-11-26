@@ -1,15 +1,16 @@
 ﻿using Ninject;
-using Ninject.Parameters;
 
 namespace Bot.TelegramBot.Commands;
 
 public class CommandFactory : ICommandFactory
 {
     private readonly IKernel _kernel;
+    private readonly Dictionary<string, Type> _commandMap;
 
-    public CommandFactory(IKernel kernel)
+    public CommandFactory(IKernel kernel, Dictionary<string, Type> commandMap)
     {
         _kernel = kernel;
+        _commandMap = commandMap;
     }
 
     public ICommand CreateCommand(User user, string? message, CancellationToken cancellationToken)
@@ -23,19 +24,12 @@ public class CommandFactory : ICommandFactory
         if (user.State.EnteringQueryToSeeLastArticles || user.State.EnteringMaxArticlesToSeeLast)
             return ExecuteCommand<LastCommand>();
 
-        return message switch
-        {
-            "/start" => ExecuteCommand<HelpCommand>(),
-            "/help" => ExecuteCommand<HelpCommand>(),
-            "/new" => ExecuteCommand<NewCommand>(),
-            "/last" => ExecuteCommand<LastCommand>(),
-            "/remove" => ExecuteCommand<RemoveCommand>(),
-            _ => throw new InvalidOperationException("Unknown command")
-        };
+        var command = _kernel.GetAll<ICommand>()
+            .FirstOrDefault(cmd => cmd.Command.Equals(message, StringComparison.OrdinalIgnoreCase) ||
+                                   cmd.Name.Equals(message, StringComparison.OrdinalIgnoreCase));
+
+        return command ?? throw new InvalidOperationException("Unknown command");
     }
 
-    private T ExecuteCommand<T>() where T : ICommand
-    {
-        return _kernel.Get<T>();
-    }
+    private T ExecuteCommand<T>() where T : ICommand => _kernel.Get<T>();
 }

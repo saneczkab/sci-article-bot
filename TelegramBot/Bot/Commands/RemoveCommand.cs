@@ -10,6 +10,7 @@ public class RemoveCommand : ICommand
     private string _message;
     private CancellationToken _cancellationToken;
     public string Command => "/remove";
+    public string Name => "Удалить запрос";
     public string Description => "удалить запрос из рассылки";
     
     public async Task Execute(ITelegramBotClient botClient, User user, 

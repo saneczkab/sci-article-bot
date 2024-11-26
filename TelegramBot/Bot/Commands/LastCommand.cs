@@ -10,6 +10,7 @@ public class LastCommand : ICommand
     private CancellationToken _cancellationToken;
     private string _message;
     public string Command => "/last";
+    public string Name => "Последние статьи";
     public string Description => "показать последние статьи по запросу";
     
     public async Task Execute(ITelegramBotClient botClient, User user, 

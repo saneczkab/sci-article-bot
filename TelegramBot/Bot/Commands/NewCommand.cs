@@ -9,6 +9,7 @@ public class NewCommand : ICommand
     private string _message;
     private CancellationToken _cancellationToken;
     public string Command => "/new";
+    public string Name => "Новый запрос";
     public string Description => "добавить запрос в рассылку";
 
     public async Task Execute(ITelegramBotClient botClient, User user, 
@@ -38,7 +39,7 @@ public class NewCommand : ICommand
 
     private async Task GetQueryText()
     {
-        var query = new Query(_message);
+        var query = new Query(char.ToUpper(_message[0]) + _message[1..].ToLower());
         _user.State.EnteringQuery = false;
         
         if (_user.Queries.Contains(query))
@@ -46,12 +47,18 @@ public class NewCommand : ICommand
             await _botClient.SendMessage(chatId: _user.Id, text: $"Запрос \"{query}\" уже есть в рассылке",
                 replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
+        else if (_message.Equals("отмена", StringComparison.CurrentCultureIgnoreCase))
+        {
+            await _botClient.SendMessage(chatId: _user.Id, 
+                text: $"Добавление запроса \"{query}\" по техническим причинам невозможно.",
+                replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: _cancellationToken);
+        }
         else
         {
             _user.State.ConfirmingQuery = true;
             _user.State.ProcessingQuery = query;
             await LastArticlesGetter.SendLastArticles(_botClient, _user, 5, _cancellationToken);
-            await _botClient.SendMessage(chatId: _user.Id, text: $"Вы хотите добавить запрос '{_message}' в рассылку?", 
+            await _botClient.SendMessage(chatId: _user.Id, text: $"Вы хотите добавить запрос '{query}' в рассылку?", 
                 replyMarkup: MessageHandler.ConfirmationKeyboard, cancellationToken: _cancellationToken);
         }
         

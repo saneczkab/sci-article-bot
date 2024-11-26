@@ -1,4 +1,5 @@
-﻿using Bot.TelegramBot.Commands;
+﻿using System.Reflection;
+using Bot.TelegramBot.Commands;
 using Ninject.Modules;
 using Telegram.Bot;
 
@@ -9,12 +10,11 @@ public class BotModule : NinjectModule
     public override void Load()
     {
         Bind<ICommandFactory>().To<CommandFactory>().InSingletonScope();
-        Bind<ITelegramBotClient>().ToMethod(_ => 
-            new TelegramBotClient("7377758210:AAEnYbnKCdZ5CNXzSxsN0XRl6iPZLs8BOdA")).InSingletonScope();
-        
-        Bind<ICommand>().To<HelpCommand>();
-        Bind<ICommand>().To<NewCommand>();
-        Bind<ICommand>().To<LastCommand>();
-        Bind<ICommand>().To<RemoveCommand>();
+
+        var commandTypes = Assembly.GetExecutingAssembly().GetTypes()
+            .Where(t => typeof(ICommand).IsAssignableFrom(t) && t is { IsInterface: false, IsAbstract: false });
+
+        foreach (var commandType in commandTypes)
+            Bind(typeof(ICommand)).To(commandType);
     }
 }
