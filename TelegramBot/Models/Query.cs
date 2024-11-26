@@ -1,4 +1,4 @@
-﻿namespace Bot;
+﻿namespace Bot.Models;
 
 public class Query
 {

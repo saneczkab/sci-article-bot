@@ -1,8 +1,8 @@
-﻿using Bot.TelegramBot.Commands;
+﻿using Bot.TelegramBot.Interfaces;
 using Ninject;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace Bot.Bot;
+namespace Bot.TelegramBot;
 
 public static class Keyboards
 {

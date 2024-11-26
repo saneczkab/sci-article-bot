@@ -1,4 +1,5 @@
-﻿using Bot.Bot;
+﻿using Bot.Models;
+using Bot.TelegramBot.Interfaces;
 using Ninject;
 
 namespace Bot.TelegramBot.Commands;

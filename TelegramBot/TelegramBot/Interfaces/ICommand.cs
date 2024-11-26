@@ -1,6 +1,7 @@
-﻿using Telegram.Bot;
+﻿using Bot.Models;
+using Telegram.Bot;
 
-namespace Bot.TelegramBot.Commands;
+namespace Bot.TelegramBot.Interfaces;
 
 public interface ICommand
 {

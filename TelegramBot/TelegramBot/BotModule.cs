@@ -1,7 +1,6 @@
-﻿using System.Reflection;
-using Bot.TelegramBot.Commands;
+﻿using Bot.TelegramBot.Commands;
+using Bot.TelegramBot.Interfaces;
 using Ninject.Modules;
-using Telegram.Bot;
 
 namespace Bot.TelegramBot;
 

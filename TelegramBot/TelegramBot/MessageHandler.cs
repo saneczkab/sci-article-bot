@@ -1,14 +1,10 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Text.Json;
-using Bot.Bot;
 using Bot.TelegramBot.Commands;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.ReplyMarkups;
 using Ninject;
-using Ninject.Parameters;
+using User = Bot.Models.User;
 
 namespace Bot.TelegramBot;
 

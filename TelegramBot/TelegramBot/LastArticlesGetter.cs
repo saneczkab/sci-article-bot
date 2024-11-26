@@ -1,10 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
-using Bot.Bot;
+using Bot.Models;
 using Telegram.Bot;
-using Telegram.Bot.Types.ReplyMarkups;
 
-namespace Bot.TelegramBot.Commands;
+namespace Bot.TelegramBot;
 
 public class LastArticlesGetter
 {

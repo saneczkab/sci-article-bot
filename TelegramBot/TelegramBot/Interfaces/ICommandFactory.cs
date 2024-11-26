@@ -1,4 +1,6 @@
-﻿namespace Bot.TelegramBot.Commands;
+﻿using Bot.Models;
+
+namespace Bot.TelegramBot.Interfaces;
 
 public interface ICommandFactory
 {

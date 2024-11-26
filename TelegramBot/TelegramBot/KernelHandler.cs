@@ -1,7 +1,6 @@
-﻿using Bot.TelegramBot;
-using Ninject;
+﻿using Ninject;
 
-namespace Bot.Bot;
+namespace Bot.TelegramBot;
 
 public static class KernelHandler
 {
