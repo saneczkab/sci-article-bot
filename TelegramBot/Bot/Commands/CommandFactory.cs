@@ -5,12 +5,10 @@ namespace Bot.TelegramBot.Commands;
 public class CommandFactory : ICommandFactory
 {
     private readonly IKernel _kernel;
-    private readonly Dictionary<string, Type> _commandMap;
 
-    public CommandFactory(IKernel kernel, Dictionary<string, Type> commandMap)
+    public CommandFactory(IKernel kernel)
     {
         _kernel = kernel;
-        _commandMap = commandMap;
     }
 
     public ICommand CreateCommand(User user, string? message, CancellationToken cancellationToken)
