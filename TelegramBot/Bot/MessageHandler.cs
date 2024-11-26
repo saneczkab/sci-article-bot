@@ -41,18 +41,8 @@ public static class MessageHandler
     {
         var text = message.Text!;
         var commandFactory = KernelHandler.Kernel.Get<CommandFactory>();
-
-        try
-        {
-            var command = commandFactory.CreateCommand(user, text, cancellationToken);
-            await command.Execute(botClient, user, cancellationToken, text);
-        }
-        catch (InvalidOperationException)
-        {
-            await botClient.SendMessage(chatId: user.Id, 
-                text: "Неизвестная команда. Для получения списка команд введите /help", 
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
-        }
+        var command = commandFactory.CreateCommand(user, text, cancellationToken);
+        await command.Execute(botClient, user, cancellationToken, text);
     }
 
 
