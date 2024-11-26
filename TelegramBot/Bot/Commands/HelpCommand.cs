@@ -14,6 +14,7 @@ public class HelpCommand : ICommand
     {
         var helpMessage = "Добро пожаловать в бота, который отправляет уведомления о новых научных статьях!\n" +
                           $"Ограничение по максимальному числу запросов: {Bot.MaxQueries}.\n" +
+                          $"Число подключенных запросов: {user.Queries.Count}.\n" +
                           "В боте доступны следующие команды:\n\n";
         var commandMetadata = KernelHandler.Kernel.GetAll<ICommand>();
         helpMessage = commandMetadata
