@@ -7,19 +7,20 @@ namespace Bot.TelegramBot.Commands;
 
 public class LastArticlesGetter
 {
-        public static async Task SendLastArticles(ITelegramBotClient botClient, User user, string message,
+        public static async Task SendLastArticles(ITelegramBotClient botClient, User user, int message,
         CancellationToken cancellationToken)
     {
         await botClient.SendMessage(chatId: user.Id, text: "Идёт поиск статей...", 
             cancellationToken: cancellationToken);
+        var query = user.State.ProcessingQuery!.Text;
         
-        var articles = GetLastArticles(message, 5);
+        var articles = GetLastArticles(query, message);
         if (articles.Count == 0)
             await botClient.SendMessage(chatId: user.Id, text: "По вашему запросу не найдено статей",
                 replyMarkup: MessageHandler.CommandsKeyboard, cancellationToken: cancellationToken);
         else
         {
-            var response = articles.Aggregate($"Последние статьи по запросу {message}:\n", 
+            var response = articles.Aggregate($"Последние статьи по запросу {query}:\n", 
                 (current, article) => 
                     current + $"- [{article.Title}]({article.URL}) ({article.PublicationDate})\n");
 

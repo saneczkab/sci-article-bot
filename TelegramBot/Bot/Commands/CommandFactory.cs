@@ -20,7 +20,7 @@ public class CommandFactory : ICommandFactory
         if (user.State.RemovingQuery || user.State.ConfirmingRemoval)
             return ExecuteCommand<RemoveCommand>();
 
-        if (user.State.EnteringQueryToSeeLastArticles)
+        if (user.State.EnteringQueryToSeeLastArticles || user.State.EnteringMaxArticlesToSeeLast)
             return ExecuteCommand<LastCommand>();
 
         return message switch

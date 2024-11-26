@@ -50,7 +50,7 @@ public class NewCommand : ICommand
         {
             _user.State.ConfirmingQuery = true;
             _user.State.ProcessingQuery = query;
-            await LastArticlesGetter.SendLastArticles(_botClient, _user, _message, _cancellationToken);
+            await LastArticlesGetter.SendLastArticles(_botClient, _user, 5, _cancellationToken);
             await _botClient.SendMessage(chatId: _user.Id, text: $"Вы хотите добавить запрос '{_message}' в рассылку?", 
                 replyMarkup: MessageHandler.ConfirmationKeyboard, cancellationToken: _cancellationToken);
         }
