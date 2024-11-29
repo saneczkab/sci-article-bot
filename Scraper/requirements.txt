@@ -16,6 +16,7 @@ python-ulid==1.1.0
 redis==5.2.0
 redis-om==0.3.3
 requests==2.32.3
+schedule==1.2.2
 tqdm==4.67.1
 types-cffi==1.16.0.20240331
 types-pyOpenSSL==24.1.0.20240722
