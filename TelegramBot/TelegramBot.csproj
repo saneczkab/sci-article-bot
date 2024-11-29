@@ -9,6 +9,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Redis.OM" Version="0.7.6" />
+      <PackageReference Include="StackExchange.Redis" Version="2.8.22" />
       <PackageReference Include="Telegram.Bot" Version="22.0.0" />
     </ItemGroup>
 

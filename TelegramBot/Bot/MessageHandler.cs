@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.Json;
+using Redis.OM;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
@@ -10,14 +11,12 @@ namespace Bot.TelegramBot;
 
 public static class MessageHandler
 {
-    private static readonly ConcurrentDictionary<long, User> Users = new(); // Временное решение, пока нет бд.
-    
     private const string HelpMessage = "В боте доступны следующие команды:\n" +
                                        "/help - список доступных команд\n" +
                                        "/new - добавить новый запрос в рассылку\n" +
                                        "/last - показать последние 5 опубликованных статей для запроса\n" +
                                        "/remove - удалить из рассылки один из запросов\n";
-    
+
     public static readonly ReplyKeyboardMarkup CommandsKeyboard = new([
         [
             new KeyboardButton("/help"),
@@ -30,7 +29,7 @@ public static class MessageHandler
         OneTimeKeyboard = true,
         ResizeKeyboard = true
     };
-    
+
     public static readonly ReplyKeyboardMarkup ConfirmationKeyboard = new([
         [
             new KeyboardButton("Да"),
@@ -46,9 +45,9 @@ public static class MessageHandler
         CancellationToken cancellationToken)
     {
         var message = update.Message;
-        if (message is null) 
+        if (message is null)
             return;
-        
+
         var chatId = message.Chat.Id;
         var user = GetUserFromDatabase(chatId);
 
@@ -97,7 +96,7 @@ public static class MessageHandler
         Console.WriteLine($"Error: {exception}");
         return Task.CompletedTask;
     }
-    
+
     private static async Task SendGreetingMessage(ITelegramBotClient botClient, User user,
         CancellationToken cancellationToken)
     {
@@ -108,7 +107,7 @@ public static class MessageHandler
         await botClient.SendMessage(chatId: user.Id, text: text, replyMarkup: CommandsKeyboard,
             cancellationToken: cancellationToken);
     }
-    
+
     private static async Task SendHelpMessage(ITelegramBotClient botClient, User user,
         CancellationToken cancellationToken)
     {
@@ -116,60 +115,55 @@ public static class MessageHandler
                 cancellationToken: cancellationToken);
     }
 
-    private static void AddUserToDatabase(long chatId)
+    private static User AddUserToDatabase(long chatId)
     {
-        // Временное решение, пока нет бд
-        Users.TryAdd(chatId, new User(chatId));
+        var user = new User(chatId);
+        DatabaseConnection.Users.Insert(user);
+        return user;
     }
 
     private static User GetUserFromDatabase(long chatId)
     {
-        // Временное решение, пока нет бд
-        var isUserExists = Users.TryGetValue(chatId, out _);
-        if (!isUserExists)
-            AddUserToDatabase(chatId);
-        
-        return Users[chatId];
+        var user = DatabaseConnection.Users.Where(u => u.Id == chatId).FirstOrDefault() ?? AddUserToDatabase(chatId);
+        return user;
     }
-    
+
     public static void UpdateUserInDatabase(User user)
     {
-        // Временное решение, пока нет бд
-        Users[user.Id] = user;
+        DatabaseConnection.Users.Insert(user);
     }
 
     private static void RemoveUserFromDatabase(User user)
     {
-        // Временное решение, пока нет бд
-        Users.TryRemove(user.Id, out _);
+        DatabaseConnection.Users.Delete(user);
     }
 
     public static async Task GetNewArticles(ITelegramBotClient botClient,
         CancellationToken cancellationToken)
     {
         // Временное решение, пока нет бд
-        foreach (var user in Users)
+        foreach (var user in )
         {
             await botClient.SendMessage(chatId: user.Key, text: "Произошёл поиск новых статей...",
                 replyMarkup: CommandsKeyboard, cancellationToken: cancellationToken);
         }
     }
-    
+
     public static async Task SendLastArticles(ITelegramBotClient botClient, User user, string message,
         CancellationToken cancellationToken)
     {
-        await botClient.SendMessage(chatId: user.Id, text: "Идёт поиск статей...", 
+        await botClient.SendMessage(chatId: user.Id, text: "Идёт поиск статей...",
             cancellationToken: cancellationToken);
-        
+
         var articles = GetLastArticles(message, 5);
         if (articles.Count == 0)
             await botClient.SendMessage(chatId: user.Id, text: "По вашему запросу не найдено статей",
                 replyMarkup: CommandsKeyboard, cancellationToken: cancellationToken);
 
         var response = articles.Aggregate($"Последние статьи по запросу {message}:\n",
-            (current, article) => current + $"- [{article.Title}]({article.URL}) ({article.PublicationDate})\n");
+            (current, article) => current + $"- [{article.Title}]({article.URL}) ({article.Issued})\n");
 
-        await botClient.SendMessage(chatId: user.Id, text: response, 
+        await botClient.SendMessage(chatId: user.Id, text: response,
             parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: CommandsKeyboard,
             cancellationToken: cancellationToken);
     }
@@ -196,11 +190,11 @@ public static class MessageHandler
         var result = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(output);
 
         return (from item in result
-            let title = item["title"].ToString()
-            let depositedDate =
-                DateTimeOffset.FromUnixTimeSeconds(long.Parse(item["deposited_date"].ToString())).DateTime
-            let issn = item["issn"].ToString()
-            let url = item["url"].ToString()
-            select new Article(title, DateOnly.FromDateTime(depositedDate), issn, url)).ToList();
+                let title = item["title"].ToString()
+                let depositedDate =
+                    DateTimeOffset.FromUnixTimeSeconds(long.Parse(item["deposited_date"].ToString())).DateTime
+                let issn = item["issn"].ToString()
+                let url = item["url"].ToString()
+                select new Article(title, DateOnly.FromDateTime(depositedDate), issn, url)).ToList();
     }
 }
