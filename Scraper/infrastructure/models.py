@@ -14,8 +14,7 @@ class Journal(EmbeddedJsonModel):
 
 class Article(EmbeddedJsonModel):
     title: str
-    entity_created: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc), index=False)
-    doi: Optional[str] = Field(index=True)
+    doi: Optional[str]
     author: Optional[str]
     publisher: Optional[str]
     issued: Optional[date]
@@ -31,6 +30,7 @@ class Query(EmbeddedJsonModel):
 
 class User(JsonModel):
     id: int = Field(primary_key=True)
+    status: int = 0
     queries: list[Query]
     shown_articles_dois: set[str] = Field(default_factory=set)
 
