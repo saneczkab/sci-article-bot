@@ -1,17 +1,15 @@
-﻿namespace Bot.Models;
+using Redis.OM.Modeling;
 
+namespace Bot.Models;
+
+[Document(StorageType = StorageType.Json)]
 public class Article
 {
-    public string Title { get; set; }
-    public DateOnly PublicationDate { get; set; }
-    public string JournalISSN { get; set; }
-    public string URL { get; set; }
-
-    public Article(string title, DateOnly publicationDate, string journalISSN, string url)
-    {
-        Title = title;
-        PublicationDate = publicationDate;
-        JournalISSN = journalISSN;
-        URL = url;
-    }
+    public required string Title { get; set; }
+    public string? Doi { get; set; }
+    public string? Author { get; set; }
+    public string? Publisher { get; set; }
+    public DateOnly? Issued { get; set; }
+    public Journal? Journal { get; set; }
+    public string? Url { get; set; }
 }

@@ -1,15 +1,30 @@
-﻿namespace Bot.Models;
+using Redis.OM.Modeling;
 
+namespace Bot.Models;
+
+
+[Document(StorageType = StorageType.Json, Prefixes = [":User"])]
 public class User
 {
-    public long Id { get; set; }
-    public List<Query> Queries { get; set; }
-    public UserState State { get; set; }
+    [RedisIdField][Indexed] public long Id { get; init; }
+
+    public List<Query> Queries { get; set; } = [];
+
+    public UserState State
+    {
+        get
+        {
+            States.TryAdd(Id, new());
+            return States[Id];
+        }
+        set => States[Id] = value;
+    }
 
     public User(long id)
     {
         Id = id;
-        Queries = [];
-        State = new UserState();
     }
+
+    private static readonly Dictionary<long, UserState> States = [];
 }
+

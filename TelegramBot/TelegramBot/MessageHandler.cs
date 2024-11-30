@@ -1,5 +1,8 @@
-﻿using System.Collections.Concurrent;
-using Bot.TelegramBot.Commands;
+﻿using Bot.TelegramBot.Commands;
+
+using System.Diagnostics;
+using System.Text.Json;
+using Redis.OM;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
@@ -10,8 +13,6 @@ namespace Bot.TelegramBot;
 
 public static class MessageHandler
 {
-    private static readonly ConcurrentDictionary<long, User> Users = new(); // Временное решение, пока нет бд.
-
     public static async Task HandleUpdate(ITelegramBotClient botClient, Update update,
         CancellationToken cancellationToken)
     {
@@ -49,41 +50,36 @@ public static class MessageHandler
         return Task.CompletedTask;
     }
 
-    private static void AddUserToDatabase(long chatId)
+    private static User AddUserToDatabase(long chatId)
     {
-        // Временное решение, пока нет бд
-        Users.TryAdd(chatId, new User(chatId));
+        var user = new User(chatId);
+        DatabaseConnection.Users.Insert(user);
+        return user;
     }
 
     private static User GetUserFromDatabase(long chatId)
     {
-        // Временное решение, пока нет бд
-        var isUserExists = Users.TryGetValue(chatId, out _);
-        if (!isUserExists)
-            AddUserToDatabase(chatId);
-
-        return Users[chatId];
+        var user = DatabaseConnection.Users.Where(u => u.Id == chatId).FirstOrDefault() ?? AddUserToDatabase(chatId);
+        return user;
     }
 
     public static void UpdateUserInDatabase(User user)
     {
-        // Временное решение, пока нет бд
-        Users[user.Id] = user;
+        DatabaseConnection.Users.Insert(user);
     }
 
     private static void RemoveUserFromDatabase(User user)
     {
-        // Временное решение, пока нет бд
-        Users.TryRemove(user.Id, out _);
+        DatabaseConnection.Users.Delete(user);
     }
 
     public static async Task GetNewArticles(ITelegramBotClient botClient,
         CancellationToken cancellationToken)
     {
         // Временное решение, пока нет бд
-        foreach (var user in Users)
+        foreach (var user in DatabaseConnection.PopUpdatedUsers())
         {
-            await botClient.SendMessage(chatId: user.Key, text: "Произошёл поиск новых статей...",
+            await botClient.SendMessage(chatId: user.Id, text: "Произошёл поиск новых статей...",
                 replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
         }
     }
