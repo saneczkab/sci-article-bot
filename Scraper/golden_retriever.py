@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, date
+from datetime import date, datetime, timedelta
 
 from habanero import Crossref
 
@@ -50,11 +50,15 @@ def search_today_articles(query: str) -> list[Article]:
     return articles
 
 
-def _dateparts_to_date(dateparts):
+def _dateparts_to_date(dateparts: list | None) -> date | None:
     if dateparts is None:
         return None
+
+    if len(dateparts) < 3:
+        dateparts += [1] * (3-len(dateparts))
     return date(*dateparts)
 
 
 def _format_author(item):
-    return ', '.join(f"{author['family']} {author['given']}" for author in item.get('author', []))
+    return ', '.join(
+        f"{author.get('family', '')} {author.get('given', '')}".strip() for author in item.get('author', []))
