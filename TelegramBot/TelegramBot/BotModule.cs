@@ -12,7 +12,7 @@ public class BotModule : NinjectModule
 
         Bind<ICommand>().To<HelpCommand>();
         Bind<ICommand>().To<NewCommand>();
-        Bind<ICommand>().To<LastCommand>();
+        // Bind<ICommand>().To<LastCommand>();
         Bind<ICommand>().To<RemoveCommand>();
     }
 }

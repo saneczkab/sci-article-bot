@@ -3,7 +3,7 @@
 public class Query
 {
     public string Text { get; set; }
-    public DateOnly? LastSearch { get; set; } = null;
+    public DateTime? LastSearch { get; set; } = null;
     public List<Article> NewArticles { get; set; } = [];
 
     public Query(string text)
@@ -12,4 +12,6 @@ public class Query
     }
 
     public override string ToString() => Text;
+
+    public override bool Equals(object? obj) => obj is Query query && Text == query.Text;
 }

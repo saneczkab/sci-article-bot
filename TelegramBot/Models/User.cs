@@ -6,9 +6,10 @@ namespace Bot.Models;
 [Document(StorageType = StorageType.Json, Prefixes = [":User"])]
 public class User
 {
-    [RedisIdField][Indexed] public long Id { get; init; }
+    [RedisIdField] public long Id { get; init; }
 
     public List<Query> Queries { get; set; } = [];
+    public HashSet<string> ShownArticlesDois { get; set; } = [];
 
     public UserState State
     {
@@ -17,7 +18,6 @@ public class User
             States.TryAdd(Id, new());
             return States[Id];
         }
-        set => States[Id] = value;
     }
 
     public User(long id)
@@ -27,4 +27,3 @@ public class User
 
     private static readonly Dictionary<long, UserState> States = [];
 }
-

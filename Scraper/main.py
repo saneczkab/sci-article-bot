@@ -32,8 +32,8 @@ class ArticleProcessor:
             query.last_search = datetime.now(tz=timezone.utc)
             articles = filter_articles(search_today_articles(query.text))
             for article in articles:
-                if article.doi in user.shown_articles_dois:
-                    continue
+                # if article.doi in user.shown_articles_dois:
+                #     continue
                 new_articles_found = True
                 query.new_articles.append(article)
                 user.shown_articles_dois.add(article.doi)
@@ -52,10 +52,9 @@ class ArticleProcessor:
             sleep(60)
 
 
-if __name__ == "__main__":
-    set_up_models()
-    processor = ArticleProcessor()
-    processor.handle_users()
-    processor.schedule_daily_task("09:00")
+set_up_models()
 
-    processor.blocking_run()
+processor = ArticleProcessor()
+processor.handle_users()
+processor.schedule_daily_task("09:00")
+processor.blocking_run()

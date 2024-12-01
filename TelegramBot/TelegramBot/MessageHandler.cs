@@ -8,6 +8,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Ninject;
 using User = Bot.Models.User;
+using System.Text;
 
 namespace Bot.TelegramBot;
 
@@ -59,7 +60,7 @@ public static class MessageHandler
 
     private static User GetUserFromDatabase(long chatId)
     {
-        var user = DatabaseConnection.Users.Where(u => u.Id == chatId).FirstOrDefault() ?? AddUserToDatabase(chatId);
+        var user = DatabaseConnection.Users.FindById(chatId.ToString()) ?? AddUserToDatabase(chatId);
         return user;
     }
 
@@ -76,11 +77,28 @@ public static class MessageHandler
     public static async Task GetNewArticles(ITelegramBotClient botClient,
         CancellationToken cancellationToken)
     {
-        // Временное решение, пока нет бд
-        foreach (var user in DatabaseConnection.PopUpdatedUsers())
+        foreach (var user in DatabaseConnection.PopAllUsers())
         {
-            await botClient.SendMessage(chatId: user.Id, text: "Произошёл поиск новых статей...",
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
+            var message = new StringBuilder();
+            foreach (var query in user.Queries)
+            {
+                if (query.NewArticles.Count == 0)
+                {
+                    message.Append($"По запросу <code>{query.Text}</code> не найдено ни одной статьи.\n\n");
+                    continue;
+                }
+
+                message.Append($"По запросу <code>{query.Text}</code> найдены следующие статьи:\n\n");
+                for (var i = 0; i < query.NewArticles.Count; i++)
+                    message.Append($"{i + 1}. {query.NewArticles[i]}\n\n");
+                message.Append('\n');
+
+                query.NewArticles.Clear();
+            }
+            UpdateUserInDatabase(user);
+            await botClient.SendMessage(chatId: user.Id, text: message.ToString(),
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken,
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
     }
 }

@@ -2,6 +2,18 @@
 
 public static class Scheduler
 {
+    public static Task RunWithInterval(TimeSpan interval, Func<Task> task)
+    {
+        return Task.Run(async () =>
+        {
+            while (true)
+            {
+                await task();
+                await Task.Delay(interval);
+            }
+        });
+    }
+
     public static void RunDailyTask(int hour, int minute, Func<Task> task)
     {
         var now = DateTime.Now;
@@ -11,14 +23,6 @@ public static class Scheduler
             nextRun = nextRun.AddDays(1);
 
         var timeToGo = nextRun - now;
-        Task.Delay(timeToGo).ContinueWith(async _ =>
-        {
-            await task();
-            while (true)
-            {
-                await Task.Delay(TimeSpan.FromDays(1));
-                await task();
-            }
-        });
+        Task.Delay(timeToGo).ContinueWith(_ => RunWithInterval(TimeSpan.FromDays(1), task));
     }
 }

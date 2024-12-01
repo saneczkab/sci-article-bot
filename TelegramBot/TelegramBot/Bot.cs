@@ -21,10 +21,17 @@ public static class Bot
             new ReceiverOptions(),
             cts.Token);
 
-        Scheduler.RunDailyTask(10, 00, async () =>
-            await MessageHandler.GetNewArticles(_botClient, cts.Token));
-
-        Console.ReadKey();
-        await cts.CancelAsync();
+        _ = Scheduler.RunWithInterval(
+            TimeSpan.FromSeconds(1),
+            () => MessageHandler.GetNewArticles(_botClient, cts.Token));
+        try
+        {
+            Console.WriteLine("Нажмите на любую клавишу, чтобы остановить программу:");
+            Console.ReadKey(true);
+        }
+        finally
+        {
+            await cts.CancelAsync();
+        }
     }
 }

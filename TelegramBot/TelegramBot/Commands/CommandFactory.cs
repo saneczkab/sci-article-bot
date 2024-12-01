@@ -14,8 +14,8 @@ public class CommandFactory : ICommandFactory
         if (user.State.RemovingQuery || user.State.ConfirmingRemoval)
             return ExecuteCommand<RemoveCommand>();
 
-        if (user.State.EnteringQueryToSeeLastArticles || user.State.EnteringMaxArticlesToSeeLast)
-            return ExecuteCommand<LastCommand>();
+        // if (user.State.EnteringQueryToSeeLastArticles || user.State.EnteringMaxArticlesToSeeLast)
+        //     return ExecuteCommand<LastCommand>();
 
         var command = KernelHandler.Kernel.GetAll<ICommand>()
             .FirstOrDefault(cmd => cmd.Command.Equals(message, StringComparison.OrdinalIgnoreCase) ||

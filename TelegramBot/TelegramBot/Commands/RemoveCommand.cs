@@ -62,11 +62,11 @@ public class RemoveCommand : ICommand
     {
         _user.State.ConfirmingRemoval = false;
         var query = _user.State.ProcessingQuery;
-        MessageHandler.UpdateUserInDatabase(_user);
 
         if (_message.Equals("да", StringComparison.CurrentCultureIgnoreCase))
         {
             _user.Queries.Remove(query!);
+            MessageHandler.UpdateUserInDatabase(_user);
             await _botClient.SendMessage(chatId: _user.Id, text: $"Запрос \"{query}\" удален",
                 replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
