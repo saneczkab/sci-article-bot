@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from typing import Optional
 
 from redis_om import EmbeddedJsonModel, Field, JsonModel
@@ -30,7 +30,6 @@ class Query(EmbeddedJsonModel):
 
 class User(JsonModel):
     id: int = Field(primary_key=True)
-    status: int = 0
     queries: list[Query]
     shown_articles_dois: set[str] = Field(default_factory=set)
 
