@@ -45,7 +45,7 @@ public class LastCommand : ICommand
         };
 
         _user.State.EnteringQueryToSeeLastArticles = true;
-        MessageHandler.UpdateUserInDatabase(_user);
+        DatabaseConnection.UpdateUserInDatabase(_user);
         await _botClient.SendMessage(chatId: _user.Id,
             text: "Введите запрос для просмотра последних новых статей.",
             replyMarkup: keyboard, cancellationToken: _cancellationToken);
@@ -74,7 +74,7 @@ public class LastCommand : ICommand
                 cancellationToken: _cancellationToken);
         }
 
-        MessageHandler.UpdateUserInDatabase(_user);
+        DatabaseConnection.UpdateUserInDatabase(_user);
     }
 
     private async Task SendLastArticles()
@@ -97,6 +97,6 @@ public class LastCommand : ICommand
                 cancellationToken: _cancellationToken);
         }
 
-        MessageHandler.UpdateUserInDatabase(_user);
+        DatabaseConnection.UpdateUserInDatabase(_user);
     }
 }

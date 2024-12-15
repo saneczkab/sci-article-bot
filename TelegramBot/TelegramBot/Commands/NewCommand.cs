@@ -33,7 +33,7 @@ public class NewCommand : ICommand
         else
         {
             _user.State.EnteringQuery = true;
-            MessageHandler.UpdateUserInDatabase(_user);
+            DatabaseConnection.UpdateUserInDatabase(_user);
             await _botClient.SendMessage(chatId: _user.Id, text: "Введите запрос для добавления в рассылку:",
                 cancellationToken: _cancellationToken);
         }
@@ -64,7 +64,7 @@ public class NewCommand : ICommand
                 replyMarkup: Keyboards.ConfirmationKeyboard, cancellationToken: _cancellationToken);
         }
 
-        MessageHandler.UpdateUserInDatabase(_user);
+        DatabaseConnection.UpdateUserInDatabase(_user);
     }
 
     private async Task Confirm()
@@ -83,6 +83,6 @@ public class NewCommand : ICommand
                 replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
 
-        MessageHandler.UpdateUserInDatabase(_user);
+        DatabaseConnection.UpdateUserInDatabase(_user);
     }
 }

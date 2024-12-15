@@ -22,7 +22,7 @@ public static class MessageHandler
             return;
 
         var chatId = message.Chat.Id;
-        var user = GetUserFromDatabase(chatId);
+        var user = DatabaseConnection.GetUserFromDatabase(chatId);
 
         try
         {
@@ -30,7 +30,7 @@ public static class MessageHandler
         }
         catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
         {
-            RemoveUserFromDatabase(user);
+            DatabaseConnection.RemoveUserFromDatabase(user);
         }
     }
 
@@ -51,28 +51,7 @@ public static class MessageHandler
         return Task.CompletedTask;
     }
 
-    private static User AddUserToDatabase(long chatId)
-    {
-        var user = new User(chatId);
-        DatabaseConnection.Users.Insert(user);
-        return user;
-    }
 
-    private static User GetUserFromDatabase(long chatId)
-    {
-        var user = DatabaseConnection.Users.FindById(chatId.ToString()) ?? AddUserToDatabase(chatId);
-        return user;
-    }
-
-    public static void UpdateUserInDatabase(User user)
-    {
-        DatabaseConnection.Users.Insert(user);
-    }
-
-    private static void RemoveUserFromDatabase(User user)
-    {
-        DatabaseConnection.Users.Delete(user);
-    }
 
     public static async Task GetNewArticles(ITelegramBotClient botClient,
         CancellationToken cancellationToken)
@@ -95,7 +74,7 @@ public static class MessageHandler
 
                 query.NewArticles.Clear();
             }
-            UpdateUserInDatabase(user);
+            DatabaseConnection.UpdateUserInDatabase(user);
             await botClient.SendMessage(chatId: user.Id, text: message.ToString(),
                 replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken,
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);

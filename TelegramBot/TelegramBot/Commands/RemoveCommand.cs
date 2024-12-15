@@ -55,7 +55,7 @@ public class RemoveCommand : ICommand
                 replyMarkup: Keyboards.ConfirmationKeyboard, cancellationToken: _cancellationToken);
         }
 
-        MessageHandler.UpdateUserInDatabase(_user);
+        DatabaseConnection.UpdateUserInDatabase(_user);
     }
 
     private async Task Confirm()
@@ -66,7 +66,7 @@ public class RemoveCommand : ICommand
         if (_message.Equals("да", StringComparison.CurrentCultureIgnoreCase))
         {
             _user.Queries.Remove(query!);
-            MessageHandler.UpdateUserInDatabase(_user);
+            DatabaseConnection.UpdateUserInDatabase(_user);
             await _botClient.SendMessage(chatId: _user.Id, text: $"Запрос \"{query}\" удален",
                 replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
         }
@@ -98,7 +98,7 @@ public class RemoveCommand : ICommand
         else
         {
             _user.State.RemovingQuery = true;
-            MessageHandler.UpdateUserInDatabase(_user);
+            DatabaseConnection.UpdateUserInDatabase(_user);
             await _botClient.SendMessage(chatId: _user.Id, text: $"Выберите запрос для удаления:\n{queriesMessage}",
                 replyMarkup: keyboard, cancellationToken: _cancellationToken);
         }

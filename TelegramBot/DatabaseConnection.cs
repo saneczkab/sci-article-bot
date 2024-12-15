@@ -45,4 +45,27 @@ static class DatabaseConnection
             }
         } while (!r.IsNullOrEmpty);
     }
+    
+    public static User AddUserToDatabase(long chatId)
+    {
+        var user = new User(chatId);
+        Users.Insert(user);
+        return user;
+    }
+
+    public static User GetUserFromDatabase(long chatId)
+    {
+        var user = Users.FindById(chatId.ToString()) ?? AddUserToDatabase(chatId);
+        return user;
+    }
+
+    public static void UpdateUserInDatabase(User user)
+    {
+        Users.Insert(user);
+    }
+
+    public static void RemoveUserFromDatabase(User user)
+    {
+        Users.Delete(user);
+    }
 }
