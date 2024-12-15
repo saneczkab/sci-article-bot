@@ -15,12 +15,12 @@ namespace Bot.TelegramBot;
 
 public class MessageHandler
 {
-    private static ICommandFactory _factory;
+    private ICommandFactory Factory { get; }
     private IKeyboards Keyboards { get; }
 
     public MessageHandler(ICommandFactory factory, IKeyboards keyboards)
     {
-        _factory = factory;
+        Factory = factory;
         Keyboards = keyboards;
     }
     
@@ -48,8 +48,7 @@ public class MessageHandler
         CancellationToken cancellationToken)
     {
         var text = message.Text!;
-        var commandFactory = _factory;
-        var command = commandFactory.CreateCommand(user, text, cancellationToken);
+        var command = Factory.CreateCommand(user, text, cancellationToken);
         
         if (command is null)
         {
