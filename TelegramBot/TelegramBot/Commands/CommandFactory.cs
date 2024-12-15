@@ -15,7 +15,7 @@ public class CommandFactory : ICommandFactory
         Commands = commands;
     }
     
-    public ICommand CreateCommand(User user, string? message, CancellationToken cancellationToken)
+    public ICommand? CreateCommand(User user, string? message, CancellationToken cancellationToken)
     {
         if (user.State.EnteringQuery || user.State.ConfirmingQuery)
             return ExecuteCommand<NewCommand>();
@@ -30,7 +30,7 @@ public class CommandFactory : ICommandFactory
             .FirstOrDefault(cmd => cmd.Command.Equals(message, StringComparison.OrdinalIgnoreCase) ||
                                    cmd.Name.Equals(message, StringComparison.OrdinalIgnoreCase));
 
-        return command ?? ExecuteCommand<UnknownCommand>();
+        return command;
     }
 
     private T ExecuteCommand<T>() where T : ICommand => Kernel.Get<T>();

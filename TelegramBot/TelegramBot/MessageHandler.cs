@@ -50,6 +50,14 @@ public class MessageHandler
         var text = message.Text!;
         var commandFactory = _factory;
         var command = commandFactory.CreateCommand(user, text, cancellationToken);
+        
+        if (command is null)
+        {
+            await botClient.SendMessage(chatId: user.Id,
+                text: "Неизвестная команда. Для получения списка команд введите /help",
+                cancellationToken: cancellationToken, replyMarkup: Keyboards.CommandsKeyboard);
+            return;
+        }
         await command.Execute(botClient, user, cancellationToken, text);
     }
     
