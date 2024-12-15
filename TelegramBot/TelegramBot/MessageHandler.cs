@@ -9,12 +9,22 @@ using Telegram.Bot.Types;
 using Ninject;
 using User = Bot.Models.User;
 using System.Text;
+using Bot.TelegramBot.Interfaces;
 
 namespace Bot.TelegramBot;
 
-public static class MessageHandler
+public class MessageHandler
 {
-    public static async Task HandleUpdate(ITelegramBotClient botClient, Update update,
+    private static ICommandFactory _factory;
+    private IKeyboards Keyboards { get; }
+
+    public MessageHandler(ICommandFactory factory, IKeyboards keyboards)
+    {
+        _factory = factory;
+        Keyboards = keyboards;
+    }
+    
+    public async Task HandleUpdate(ITelegramBotClient botClient, Update update,
         CancellationToken cancellationToken)
     {
         var message = update.Message;
@@ -34,26 +44,23 @@ public static class MessageHandler
         }
     }
 
-    private static async Task SendResponse(ITelegramBotClient botClient, User user, Message message,
+    private async Task SendResponse(ITelegramBotClient botClient, User user, Message message,
         CancellationToken cancellationToken)
     {
         var text = message.Text!;
-        var commandFactory = KernelHandler.Kernel.Get<CommandFactory>();
+        var commandFactory = _factory;
         var command = commandFactory.CreateCommand(user, text, cancellationToken);
         await command.Execute(botClient, user, cancellationToken, text);
     }
-
-
-    public static Task HandleError(ITelegramBotClient botClient, Exception exception,
+    
+    public Task HandleError(ITelegramBotClient botClient, Exception exception,
         CancellationToken cancellationToken)
     {
         Console.WriteLine($"Error: {exception}");
         return Task.CompletedTask;
     }
-
-
-
-    public static async Task GetNewArticles(ITelegramBotClient botClient,
+    
+    public async Task GetNewArticles(ITelegramBotClient botClient,
         CancellationToken cancellationToken)
     {
         foreach (var user in DatabaseConnection.PopAllUsers())

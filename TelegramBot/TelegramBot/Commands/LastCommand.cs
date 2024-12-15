@@ -11,10 +11,16 @@ public class LastCommand : ICommand
     private User _user;
     private CancellationToken _cancellationToken;
     private string _message;
+    private IKeyboards Keyboards { get; }
     public string Command => "/last";
     public string Name => "Последние статьи";
     public string Description => "показать последние статьи по запросу";
 
+    public LastCommand(IKeyboards keyboards)
+    {
+        Keyboards = keyboards;
+    }
+    
     public async Task Execute(ITelegramBotClient botClient, User user,
         CancellationToken cancellationToken, string message)
     {

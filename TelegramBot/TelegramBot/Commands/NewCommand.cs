@@ -10,10 +10,16 @@ public class NewCommand : ICommand
     private User _user;
     private string _message;
     private CancellationToken _cancellationToken;
+    private IKeyboards Keyboards { get; }
     public string Command => "/new";
     public string Name => "Новый запрос";
     public string Description => "добавить запрос в рассылку";
 
+    public NewCommand(IKeyboards keyboards)
+    {
+        Keyboards = keyboards;
+    }
+    
     public async Task Execute(ITelegramBotClient botClient, User user,
         CancellationToken cancellationToken, string message)
     {
