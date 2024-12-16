@@ -15,23 +15,21 @@ public class CommandFactory : ICommandFactory
         Commands = commands;
     }
     
-    public ICommand? CreateCommand(User user, string? message, CancellationToken cancellationToken)
+    public ICommand? GetCommand(User user, string? message, CancellationToken cancellationToken)
     {
         if (user.State.EnteringQuery || user.State.ConfirmingQuery)
-            return ExecuteCommand<NewCommand>();
+            return Kernel.Get<NewCommand>();
 
         if (user.State.RemovingQuery || user.State.ConfirmingRemoval)
-            return ExecuteCommand<RemoveCommand>();
+            return Kernel.Get<RemoveCommand>();
 
         // if (user.State.EnteringQueryToSeeLastArticles || user.State.EnteringMaxArticlesToSeeLast)
-        //     return ExecuteCommand<LastCommand>();
-
+        //     return Kernel.Get<LastCommand>();
+        
         var command = Commands
             .FirstOrDefault(cmd => cmd.Command.Equals(message, StringComparison.OrdinalIgnoreCase) ||
                                    cmd.Name.Equals(message, StringComparison.OrdinalIgnoreCase));
 
         return command;
     }
-
-    private T ExecuteCommand<T>() where T : ICommand => Kernel.Get<T>();
 }

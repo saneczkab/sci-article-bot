@@ -48,7 +48,7 @@ public class MessageHandler
         CancellationToken cancellationToken)
     {
         var text = message.Text!;
-        var command = Factory.CreateCommand(user, text, cancellationToken);
+        var command = Factory.GetCommand(user, text, cancellationToken);
         
         if (command is null)
         {
