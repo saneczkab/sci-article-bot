@@ -6,10 +6,6 @@ namespace Bot.TelegramBot.Commands;
 
 public class NewCommand : ICommand
 {
-    private ITelegramBotClient _botClient;
-    private User _user;
-    private string _message;
-    private CancellationToken _cancellationToken;
     private IKeyboards Keyboards { get; }
     public string Command => "/new";
     public string Name => "Новый запрос";
@@ -19,76 +15,75 @@ public class NewCommand : ICommand
     {
         Keyboards = keyboards;
     }
-    
+
     public async Task Execute(ITelegramBotClient botClient, User user,
         CancellationToken cancellationToken, string message)
     {
-        _botClient = botClient;
-        _user = user;
-        _cancellationToken = cancellationToken;
-        _message = message;
-
-        if (_user.Queries.Count >= Bot.MaxQueries)
-            await _botClient.SendMessage(chatId: _user.Id,
+        if (user.Queries.Count >= Bot.MaxQueries)
+            await botClient.SendMessage(chatId: user.Id,
                 text: $"Вы не можете добавить больше {Bot.MaxQueries} запросов в рассылку.",
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
-        else if (_user.State.EnteringQuery)
-            await GetQueryText();
-        else if (_user.State.ConfirmingQuery)
-            await Confirm();
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
+        else if (user.State.EnteringQuery)
+            await ProcessQueryText(botClient, user, cancellationToken, message);
+        else if (user.State.ConfirmingQuery)
+            await Confirm(botClient, user, cancellationToken, message);
         else
-        {
-            _user.State.EnteringQuery = true;
-            DatabaseConnection.UpdateUserInDatabase(_user);
-            await _botClient.SendMessage(chatId: _user.Id, text: "Введите запрос для добавления в рассылку:",
-                cancellationToken: _cancellationToken);
-        }
+            await PromptForQuery(user, botClient, cancellationToken);
     }
 
-    private async Task GetQueryText()
+    private async Task PromptForQuery(User user, ITelegramBotClient botClient, CancellationToken cancellationToken)
     {
-        var query = new Query(char.ToUpper(_message[0]) + _message[1..].ToLower());
-        _user.State.EnteringQuery = false;
-
-        if (_user.Queries.Contains(query))
-        {
-            await _botClient.SendMessage(chatId: _user.Id, text: $"Запрос \"{query}\" уже есть в рассылке",
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
-        }
-        else if (_message.Equals("отмена", StringComparison.CurrentCultureIgnoreCase))
-        {
-            await _botClient.SendMessage(chatId: _user.Id,
-                text: $"Добавление запроса \"{query}\" по техническим причинам невозможно.",
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
-        }
-        else
-        {
-            _user.State.ConfirmingQuery = true;
-            _user.State.ProcessingQuery = query;
-            await LastArticlesGetter.SendLastArticles(_botClient, _user, 5, _cancellationToken);
-            await _botClient.SendMessage(chatId: _user.Id, text: $"Вы хотите добавить запрос '{query}' в рассылку?",
-                replyMarkup: Keyboards.ConfirmationKeyboard, cancellationToken: _cancellationToken);
-        }
-
-        DatabaseConnection.UpdateUserInDatabase(_user);
+        user.State.EnteringQuery = true;
+        DatabaseConnection.UpdateUserInDatabase(user);
+        await botClient.SendMessage(chatId: user.Id, text: "Введите запрос для добавления в рассылку:",
+            cancellationToken: cancellationToken);
     }
 
-    private async Task Confirm()
+    private async Task ProcessQueryText(ITelegramBotClient botClient, User user,
+        CancellationToken cancellationToken, string message)
     {
-        if (_message.Equals("да", StringComparison.CurrentCultureIgnoreCase))
+        var query = new Query(char.ToUpper(message[0]) + message[1..].ToLower());
+        user.State.EnteringQuery = false;
+
+        if (user.Queries.Contains(query))
         {
-            _user.Queries.Add(_user.State.ProcessingQuery);
-            _user.State.ConfirmingQuery = false;
-            await _botClient.SendMessage(chatId: _user.Id, text: "Запрос добавлен в рассылку.",
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
+            await botClient.SendMessage(chatId: user.Id, text: $"Запрос \"{query}\" уже есть в рассылке",
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
+        }
+        else if (message.Equals("отмена", StringComparison.CurrentCultureIgnoreCase))
+        {
+            await botClient.SendMessage(chatId: user.Id,
+                text: "Добавление запроса отменено.",
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
         }
         else
         {
-            _user.State.ConfirmingQuery = false;
-            await _botClient.SendMessage(chatId: _user.Id, text: "Запрос не был добавлен.",
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
+            user.State.ConfirmingQuery = true;
+            user.State.ProcessingQuery = query;
+            await botClient.SendMessage(chatId: user.Id, text: $"Вы хотите добавить запрос '{query}' в рассылку?",
+                replyMarkup: Keyboards.ConfirmationKeyboard, cancellationToken: cancellationToken);
         }
 
-        DatabaseConnection.UpdateUserInDatabase(_user);
+        DatabaseConnection.UpdateUserInDatabase(user);
+    }
+
+    private async Task Confirm(ITelegramBotClient botClient, User user,
+        CancellationToken cancellationToken, string message)
+    {
+        if (message.Equals("да", StringComparison.CurrentCultureIgnoreCase))
+        {
+            user.Queries.Add(user.State.ProcessingQuery);
+            user.State.ConfirmingQuery = false;
+            await botClient.SendMessage(chatId: user.Id, text: "Запрос добавлен в рассылку.",
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
+        }
+        else
+        {
+            user.State.ConfirmingQuery = false;
+            await botClient.SendMessage(chatId: user.Id, text: "Запрос не был добавлен.",
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
+        }
+
+        DatabaseConnection.UpdateUserInDatabase(user);
     }
 }
