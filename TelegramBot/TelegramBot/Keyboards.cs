@@ -4,14 +4,20 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Bot.TelegramBot;
 
-public static class Keyboards
+public class Keyboards : IKeyboards
 {
-    public static ReplyKeyboardMarkup CommandsKeyboard
+    private static IEnumerable<ICommand> _commands;
+    
+    public Keyboards(IEnumerable<ICommand> commands)
+    {
+        _commands = commands;
+    }
+    
+    public ReplyKeyboardMarkup CommandsKeyboard
     {
         get
         {
-            var commands = KernelHandler.Kernel.GetAll<ICommand>();
-            var buttons = commands.Select(cmd => new KeyboardButton(cmd.Name)).ToArray();
+            var buttons = _commands.Select(cmd => new KeyboardButton(cmd.Name)).ToArray();
 
             return new ReplyKeyboardMarkup(buttons)
             {
@@ -21,7 +27,7 @@ public static class Keyboards
         }
     }
 
-    public static ReplyKeyboardMarkup ConfirmationKeyboard => new([
+    public ReplyKeyboardMarkup ConfirmationKeyboard => new([
         [
             new KeyboardButton("Да"),
             new KeyboardButton("Нет")

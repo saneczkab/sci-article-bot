@@ -14,7 +14,7 @@ public class LastArticlesGetter
             cancellationToken: cancellationToken);
         // TODO: реализовать
         return;
-        var query = user.State.ProcessingQuery!.Text;
+        /* var query = user.State.ProcessingQuery!.Text;
 
         var articles = GetLastArticles(query, message);
         if (articles.Count == 0)
@@ -29,7 +29,7 @@ public class LastArticlesGetter
             await botClient.SendMessage(chatId: user.Id, text: response,
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: Keyboards.CommandsKeyboard,
                 cancellationToken: cancellationToken);
-        }
+        } */
     }
 
     private static List<Article> GetLastArticles(string query, int maxArticles)

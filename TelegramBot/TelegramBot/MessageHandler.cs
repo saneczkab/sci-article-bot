@@ -9,12 +9,22 @@ using Telegram.Bot.Types;
 using Ninject;
 using User = Bot.Models.User;
 using System.Text;
+using Bot.TelegramBot.Interfaces;
 
 namespace Bot.TelegramBot;
 
-public static class MessageHandler
+public class MessageHandler
 {
-    public static async Task HandleUpdate(ITelegramBotClient botClient, Update update,
+    private ICommandFactory Factory { get; }
+    private IKeyboards Keyboards { get; }
+
+    public MessageHandler(ICommandFactory factory, IKeyboards keyboards)
+    {
+        Factory = factory;
+        Keyboards = keyboards;
+    }
+    
+    public async Task HandleUpdate(ITelegramBotClient botClient, Update update,
         CancellationToken cancellationToken)
     {
         var message = update.Message;
@@ -22,7 +32,7 @@ public static class MessageHandler
             return;
 
         var chatId = message.Chat.Id;
-        var user = GetUserFromDatabase(chatId);
+        var user = DatabaseConnection.GetUserFromDatabase(chatId);
 
         try
         {
@@ -30,51 +40,34 @@ public static class MessageHandler
         }
         catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
         {
-            RemoveUserFromDatabase(user);
+            DatabaseConnection.RemoveUserFromDatabase(user);
         }
     }
 
-    private static async Task SendResponse(ITelegramBotClient botClient, User user, Message message,
+    private async Task SendResponse(ITelegramBotClient botClient, User user, Message message,
         CancellationToken cancellationToken)
     {
         var text = message.Text!;
-        var commandFactory = KernelHandler.Kernel.Get<CommandFactory>();
-        var command = commandFactory.CreateCommand(user, text, cancellationToken);
+        var command = Factory.GetCommand(user, text, cancellationToken);
+        
+        if (command is null)
+        {
+            await botClient.SendMessage(chatId: user.Id,
+                text: "Неизвестная команда. Для получения списка команд введите /help",
+                cancellationToken: cancellationToken, replyMarkup: Keyboards.CommandsKeyboard);
+            return;
+        }
         await command.Execute(botClient, user, cancellationToken, text);
     }
-
-
-    public static Task HandleError(ITelegramBotClient botClient, Exception exception,
+    
+    public Task HandleError(ITelegramBotClient botClient, Exception exception,
         CancellationToken cancellationToken)
     {
         Console.WriteLine($"Error: {exception}");
         return Task.CompletedTask;
     }
-
-    private static User AddUserToDatabase(long chatId)
-    {
-        var user = new User(chatId);
-        DatabaseConnection.Users.Insert(user);
-        return user;
-    }
-
-    private static User GetUserFromDatabase(long chatId)
-    {
-        var user = DatabaseConnection.Users.FindById(chatId.ToString()) ?? AddUserToDatabase(chatId);
-        return user;
-    }
-
-    public static void UpdateUserInDatabase(User user)
-    {
-        DatabaseConnection.Users.Insert(user);
-    }
-
-    private static void RemoveUserFromDatabase(User user)
-    {
-        DatabaseConnection.Users.Delete(user);
-    }
-
-    public static async Task GetNewArticles(ITelegramBotClient botClient,
+    
+    public async Task GetNewArticles(ITelegramBotClient botClient,
         CancellationToken cancellationToken)
     {
         foreach (var user in DatabaseConnection.PopAllUsers())
@@ -95,7 +88,7 @@ public static class MessageHandler
 
                 query.NewArticles.Clear();
             }
-            UpdateUserInDatabase(user);
+            DatabaseConnection.UpdateUserInDatabase(user);
             await botClient.SendMessage(chatId: user.Id, text: message.ToString(),
                 replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken,
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);

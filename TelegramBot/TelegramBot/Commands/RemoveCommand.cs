@@ -7,79 +7,79 @@ namespace Bot.TelegramBot.Commands;
 
 public class RemoveCommand : ICommand
 {
-    private ITelegramBotClient _botClient;
-    private User _user;
-    private string _message;
-    private CancellationToken _cancellationToken;
+    private IKeyboards Keyboards { get; }
     public string Command => "/remove";
     public string Name => "Удалить запрос";
     public string Description => "удалить запрос из рассылки";
 
+    public RemoveCommand(IKeyboards keyboards)
+    {
+        Keyboards = keyboards;
+    }
+    
     public async Task Execute(ITelegramBotClient botClient, User user,
         CancellationToken cancellationToken, string message)
     {
-        _botClient = botClient;
-        _user = user;
-        _cancellationToken = cancellationToken;
-        _message = message;
-
-        if (_user.State.RemovingQuery)
-            await GetQueryText();
-        else if (_user.State.ConfirmingRemoval)
-            await Confirm();
+        if (user.State.RemovingQuery)
+            await ProcessQueryText(user, botClient, cancellationToken, message);
+        else if (user.State.ConfirmingRemoval)
+            await Confirm(user, botClient, cancellationToken, message);
         else
-            await SendUserQueries();
+            await PromptForQueryChoosing(user, botClient, cancellationToken);
     }
 
-    private async Task GetQueryText()
+    private async Task ProcessQueryText(User user, ITelegramBotClient botClient, 
+        CancellationToken cancellationToken, string message)
     {
-        _user.State.RemovingQuery = false;
-        var query = _user.Queries
-            .FirstOrDefault(q => q.ToString().Equals(_message, StringComparison.CurrentCultureIgnoreCase));
+        user.State.RemovingQuery = false;
+        var query = user.Queries
+            .FirstOrDefault(q => q.ToString().Equals(message, StringComparison.CurrentCultureIgnoreCase));
 
-        if (_message == "Отмена")
+        if (message == "Отмена")
         {
-            await _botClient.SendMessage(chatId: _user.Id, text: "Удаление запроса отменено",
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
+            await botClient.SendMessage(chatId: user.Id, text: "Удаление запроса отменено",
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
         }
         else if (query is null)
         {
-            await _botClient.SendMessage(chatId: _user.Id, text: $"Запрос \"{_message}\" не найден",
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
+            await botClient.SendMessage(chatId: user.Id, text: $"Запрос \"{message}\" не найден",
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
         }
         else
         {
-            _user.State.ConfirmingRemoval = true;
-            _user.State.ProcessingQuery = query;
-            await _botClient.SendMessage(chatId: _user.Id, text: $"Удалить запрос \"{query}\"?",
-                replyMarkup: Keyboards.ConfirmationKeyboard, cancellationToken: _cancellationToken);
+            user.State.ConfirmingRemoval = true;
+            user.State.ProcessingQuery = query;
+            await botClient.SendMessage(chatId: user.Id, text: $"Удалить запрос \"{query}\"?",
+                replyMarkup: Keyboards.ConfirmationKeyboard, cancellationToken: cancellationToken);
         }
 
-        MessageHandler.UpdateUserInDatabase(_user);
+        DatabaseConnection.UpdateUserInDatabase(user);
     }
 
-    private async Task Confirm()
+    private async Task Confirm(User user, ITelegramBotClient botClient, 
+        CancellationToken cancellationToken, string message)
     {
-        _user.State.ConfirmingRemoval = false;
-        var query = _user.State.ProcessingQuery;
+        user.State.ConfirmingRemoval = false;
+        var query = user.State.ProcessingQuery;
 
-        if (_message.Equals("да", StringComparison.CurrentCultureIgnoreCase))
+        if (message.Equals("да", StringComparison.CurrentCultureIgnoreCase))
         {
-            _user.Queries.Remove(query!);
-            MessageHandler.UpdateUserInDatabase(_user);
-            await _botClient.SendMessage(chatId: _user.Id, text: $"Запрос \"{query}\" удален",
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
+            user.Queries.Remove(query!);
+            DatabaseConnection.UpdateUserInDatabase(user);
+            await botClient.SendMessage(chatId: user.Id, text: $"Запрос \"{query}\" удален",
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
         }
         else
         {
-            await _botClient.SendMessage(chatId: _user.Id, text: $"Запрос \"{query}\" не будет удален",
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
+            await botClient.SendMessage(chatId: user.Id, text: $"Запрос \"{query}\" не будет удален",
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
         }
     }
 
-    private async Task SendUserQueries()
+    private async Task PromptForQueryChoosing(User user, ITelegramBotClient botClient, 
+        CancellationToken cancellationToken)
     {
-        var queries = _user.Queries;
+        var queries = user.Queries;
         var queriesMessage = queries.Aggregate("", (current, query) => current + $"{query}\n");
         var buttons = queries
             .Select(query => new KeyboardButton(query.ToString()))
@@ -92,15 +92,15 @@ public class RemoveCommand : ICommand
 
         if (queriesMessage.Length == 0)
         {
-            await _botClient.SendMessage(chatId: _user.Id, text: "У Вас нет запросов в рассылке",
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
+            await botClient.SendMessage(chatId: user.Id, text: "У Вас нет запросов в рассылке",
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
         }
         else
         {
-            _user.State.RemovingQuery = true;
-            MessageHandler.UpdateUserInDatabase(_user);
-            await _botClient.SendMessage(chatId: _user.Id, text: $"Выберите запрос для удаления:\n{queriesMessage}",
-                replyMarkup: keyboard, cancellationToken: _cancellationToken);
+            user.State.RemovingQuery = true;
+            DatabaseConnection.UpdateUserInDatabase(user);
+            await botClient.SendMessage(chatId: user.Id, text: $"Выберите запрос для удаления:\n{queriesMessage}",
+                replyMarkup: keyboard, cancellationToken: cancellationToken);
         }
     }
 }

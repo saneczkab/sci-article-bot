@@ -6,23 +6,30 @@ namespace Bot.TelegramBot.Commands;
 
 public class CommandFactory : ICommandFactory
 {
-    public ICommand CreateCommand(User user, string? message, CancellationToken cancellationToken)
+    private IKernel Kernel { get; }
+    private IEnumerable<ICommand> Commands { get; }
+
+    public CommandFactory(IKernel kernel, IEnumerable<ICommand> commands)
+    {
+        Kernel = kernel;
+        Commands = commands;
+    }
+    
+    public ICommand? GetCommand(User user, string? message, CancellationToken cancellationToken)
     {
         if (user.State.EnteringQuery || user.State.ConfirmingQuery)
-            return ExecuteCommand<NewCommand>();
+            return Kernel.Get<NewCommand>();
 
         if (user.State.RemovingQuery || user.State.ConfirmingRemoval)
-            return ExecuteCommand<RemoveCommand>();
+            return Kernel.Get<RemoveCommand>();
 
         // if (user.State.EnteringQueryToSeeLastArticles || user.State.EnteringMaxArticlesToSeeLast)
-        //     return ExecuteCommand<LastCommand>();
-
-        var command = KernelHandler.Kernel.GetAll<ICommand>()
+        //     return Kernel.Get<LastCommand>();
+        
+        var command = Commands
             .FirstOrDefault(cmd => cmd.Command.Equals(message, StringComparison.OrdinalIgnoreCase) ||
                                    cmd.Name.Equals(message, StringComparison.OrdinalIgnoreCase));
 
-        return command ?? ExecuteCommand<UnknownCommand>();
+        return command;
     }
-
-    private static T ExecuteCommand<T>() where T : ICommand => KernelHandler.Kernel.Get<T>();
 }

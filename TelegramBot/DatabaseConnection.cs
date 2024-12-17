@@ -1,12 +1,13 @@
 using System.Reflection;
 using System.Text.Json;
 using Bot.Models;
+using Bot.TelegramBot.Interfaces;
 using Redis.OM;
 using Redis.OM.Searching;
 using StackExchange.Redis;
 
 namespace Bot;
-static class DatabaseConnection
+class DatabaseConnection
 {
     // TODO: избавиться от static, перейти на DI
     public static RedisConnectionProvider Provider = new("redis://localhost:6379");
@@ -28,7 +29,6 @@ static class DatabaseConnection
             .First((a) => a.item.Type == typeof(DateTime))
             .index;
         RedisSerializationSettings.JsonSerializerOptions.Converters.RemoveAt(ind);
-
     }
 
     public static IEnumerable<User> PopAllUsers()
@@ -44,5 +44,28 @@ static class DatabaseConnection
                 yield return Users.FindById(id.ToString());
             }
         } while (!r.IsNullOrEmpty);
+    }
+    
+    public static User AddUserToDatabase(long chatId)
+    {
+        var user = new User(chatId);
+        Users.Insert(user);
+        return user;
+    }
+
+    public static User GetUserFromDatabase(long chatId)
+    {
+        var user = Users.FindById(chatId.ToString()) ?? AddUserToDatabase(chatId);
+        return user;
+    }
+
+    public static void UpdateUserInDatabase(User user)
+    {
+        Users.Insert(user);
+    }
+
+    public static void RemoveUserFromDatabase(User user)
+    {
+        Users.Delete(user);
     }
 }

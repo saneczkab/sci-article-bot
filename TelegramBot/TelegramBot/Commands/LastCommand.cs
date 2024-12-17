@@ -7,33 +7,30 @@ namespace Bot.TelegramBot.Commands;
 
 public class LastCommand : ICommand
 {
-    private ITelegramBotClient _botClient;
-    private User _user;
-    private CancellationToken _cancellationToken;
-    private string _message;
+    private IKeyboards Keyboards { get; }
     public string Command => "/last";
     public string Name => "Последние статьи";
     public string Description => "показать последние статьи по запросу";
 
+    public LastCommand(IKeyboards keyboards)
+    {
+        Keyboards = keyboards;
+    }
+    
     public async Task Execute(ITelegramBotClient botClient, User user,
         CancellationToken cancellationToken, string message)
     {
-        _botClient = botClient;
-        _user = user;
-        _cancellationToken = cancellationToken;
-        _message = message;
-
-        if (_user.State.EnteringQueryToSeeLastArticles)
-            await GetArticlesAmount();
-        else if (_user.State.EnteringMaxArticlesToSeeLast)
-            await SendLastArticles();
+        if (user.State.EnteringQueryToSeeLastArticles)
+            await PromptForArticlesAmount(user, botClient, cancellationToken, message);
+        else if (user.State.EnteringMaxArticlesToSeeLast)
+            await TrySendLastArticles(user, botClient, cancellationToken, message);
         else
-            await GetQuery();
+            await PromptForQuery(user, botClient, cancellationToken);
     }
 
-    private async Task GetQuery()
+    private async Task PromptForQuery(User user, ITelegramBotClient botClient, CancellationToken cancellationToken)
     {
-        var queries = _user.Queries;
+        var queries = user.Queries;
         var queriesMessage = queries.Aggregate("", (current, query) => current + $"{query}\n");
         var buttons = queries
             .Select(query => new KeyboardButton(query.ToString()))
@@ -44,59 +41,61 @@ public class LastCommand : ICommand
             ResizeKeyboard = true
         };
 
-        _user.State.EnteringQueryToSeeLastArticles = true;
-        MessageHandler.UpdateUserInDatabase(_user);
-        await _botClient.SendMessage(chatId: _user.Id,
+        user.State.EnteringQueryToSeeLastArticles = true;
+        DatabaseConnection.UpdateUserInDatabase(user);
+        await botClient.SendMessage(chatId: user.Id,
             text: "Введите запрос для просмотра последних новых статей.",
-            replyMarkup: keyboard, cancellationToken: _cancellationToken);
+            replyMarkup: keyboard, cancellationToken: cancellationToken);
 
         if (queriesMessage.Length > 0)
-            await _botClient.SendMessage(chatId: _user.Id,
+            await botClient.SendMessage(chatId: user.Id,
                 text: $"Вы можете как ввести новый запрос, так и выбрать один из подключённых:\n{queriesMessage}",
-                replyMarkup: keyboard, cancellationToken: _cancellationToken);
+                replyMarkup: keyboard, cancellationToken: cancellationToken);
     }
 
-    private async Task GetArticlesAmount()
+    private async Task PromptForArticlesAmount(User user, ITelegramBotClient botClient, 
+        CancellationToken cancellationToken, string message)
     {
-        _user.State.EnteringQueryToSeeLastArticles = false;
+        user.State.EnteringQueryToSeeLastArticles = false;
 
-        if (_message == "Отмена")
+        if (message == "Отмена")
         {
-            await _botClient.SendMessage(chatId: _user.Id, text: "Просмотр статей отменен",
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
+            await botClient.SendMessage(chatId: user.Id, text: "Просмотр статей отменен",
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
         }
         else
         {
-            _user.State.ProcessingQuery = new Query(_message);
-            _user.State.EnteringMaxArticlesToSeeLast = true;
-            await _botClient.SendMessage(chatId: _user.Id,
+            user.State.ProcessingQuery = new Query(message);
+            user.State.EnteringMaxArticlesToSeeLast = true;
+            await botClient.SendMessage(chatId: user.Id,
                 text: "Введите количество статей для просмотра (не более 25):",
-                cancellationToken: _cancellationToken);
+                cancellationToken: cancellationToken);
         }
 
-        MessageHandler.UpdateUserInDatabase(_user);
+        DatabaseConnection.UpdateUserInDatabase(user);
     }
 
-    private async Task SendLastArticles()
+    private async Task TrySendLastArticles(User user, ITelegramBotClient botClient, 
+        CancellationToken cancellationToken, string message)
     {
-        if (_message == "Отмена")
+        if (message == "Отмена")
         {
-            _user.State.EnteringMaxArticlesToSeeLast = false;
-            _user.State.EnteringQueryToSeeLastArticles = false;
-            await _botClient.SendMessage(chatId: _user.Id, text: "Просмотр статей отменен",
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: _cancellationToken);
+            user.State.EnteringMaxArticlesToSeeLast = false;
+            user.State.EnteringQueryToSeeLastArticles = false;
+            await botClient.SendMessage(chatId: user.Id, text: "Просмотр статей отменен",
+                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken);
         }
-        else if (int.TryParse(_message, out var maxArticles) && maxArticles is > 0 and <= 25)
+        else if (int.TryParse(message, out var maxArticles) && maxArticles is > 0 and <= 25)
         {
-            _user.State.EnteringMaxArticlesToSeeLast = false;
-            await LastArticlesGetter.SendLastArticles(_botClient, _user, maxArticles, _cancellationToken);
+            user.State.EnteringMaxArticlesToSeeLast = false;
+            await LastArticlesGetter.SendLastArticles(botClient, user, maxArticles, cancellationToken);
         }
         else
         {
-            await _botClient.SendMessage(chatId: _user.Id, text: "Введите корректное число статей (от 1 до 25):",
-                cancellationToken: _cancellationToken);
+            await botClient.SendMessage(chatId: user.Id, text: "Введите корректное число статей (от 1 до 25):",
+                cancellationToken: cancellationToken);
         }
 
-        MessageHandler.UpdateUserInDatabase(_user);
+        DatabaseConnection.UpdateUserInDatabase(user);
     }
 }

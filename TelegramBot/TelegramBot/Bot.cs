@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using Ninject;
+using Telegram.Bot;
 using Telegram.Bot.Polling;
 
 namespace Bot.TelegramBot;
@@ -14,16 +15,19 @@ public static class Bot
         _botClient = new TelegramBotClient(Token);
         var cts = new CancellationTokenSource();
         await _botClient.GetMe(cancellationToken: cts.Token);
+        
+        var kernel = new StandardKernel(new BotModule());
+        var messageHandler = kernel.Get<MessageHandler>();
 
         _botClient.StartReceiving(
-            MessageHandler.HandleUpdate,
-            MessageHandler.HandleError,
+            messageHandler.HandleUpdate,
+            messageHandler.HandleError,
             new ReceiverOptions(),
             cts.Token);
 
         _ = Scheduler.RunWithInterval(
             TimeSpan.FromSeconds(1),
-            () => MessageHandler.GetNewArticles(_botClient, cts.Token));
+            () => messageHandler.GetNewArticles(_botClient, cts.Token));
         try
         {
             Console.WriteLine("Нажмите на любую клавишу, чтобы остановить программу:");
