@@ -91,9 +91,17 @@ public class MessageHandler
                 query.NewArticles.Clear();
             }
             DatabaseConnection.UpdateUserInDatabase(user);
-            await botClient.SendMessage(chatId: user.Id, text: message.ToString(),
-                replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken,
-                parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+
+            try
+            {
+                await botClient.SendMessage(chatId: user.Id, text: message.ToString(),
+                    replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+            }
+            catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
+            {
+                DatabaseConnection.RemoveUserFromDatabase(user);
+            }
         }
     }
 }
