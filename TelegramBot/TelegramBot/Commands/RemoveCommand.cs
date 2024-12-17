@@ -8,13 +8,15 @@ namespace Bot.TelegramBot.Commands;
 public class RemoveCommand : ICommand
 {
     private IKeyboards Keyboards { get; }
+    private IDatabaseConnection DatabaseConnection { get; } 
     public string Command => "/remove";
     public string Name => "Удалить запрос";
     public string Description => "удалить запрос из рассылки";
 
-    public RemoveCommand(IKeyboards keyboards)
+    public RemoveCommand(IKeyboards keyboards, IDatabaseConnection databaseConnection)
     {
         Keyboards = keyboards;
+        DatabaseConnection = databaseConnection;
     }
     
     public async Task Execute(ITelegramBotClient botClient, User user,

@@ -8,13 +8,15 @@ namespace Bot.TelegramBot.Commands;
 public class LastCommand : ICommand
 {
     private IKeyboards Keyboards { get; }
+    private IDatabaseConnection DatabaseConnection { get; }
     public string Command => "/last";
     public string Name => "Последние статьи";
     public string Description => "показать последние статьи по запросу";
 
-    public LastCommand(IKeyboards keyboards)
+    public LastCommand(IKeyboards keyboards, IDatabaseConnection databaseConnection)
     {
         Keyboards = keyboards;
+        DatabaseConnection = databaseConnection;
     }
     
     public async Task Execute(ITelegramBotClient botClient, User user,

@@ -11,6 +11,7 @@ public class BotModule : NinjectModule
     {
         Bind<IKeyboards>().To<Keyboards>().InSingletonScope();
         Bind<IEnumerable<ICommand>>().ToMethod(ctx => ctx.Kernel.GetAll<ICommand>()).InSingletonScope();
+        Bind<IDatabaseConnection>().To<DatabaseConnection>().InSingletonScope();
         
         Bind<ICommandFactory>().To<CommandFactory>().InSingletonScope();
         Bind<ICommand>().To<HelpCommand>();

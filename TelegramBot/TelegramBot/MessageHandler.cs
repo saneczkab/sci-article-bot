@@ -17,11 +17,13 @@ public class MessageHandler
 {
     private ICommandFactory Factory { get; }
     private IKeyboards Keyboards { get; }
+    private IDatabaseConnection DatabaseConnection { get; }
 
-    public MessageHandler(ICommandFactory factory, IKeyboards keyboards)
+    public MessageHandler(ICommandFactory factory, IKeyboards keyboards, IDatabaseConnection databaseConnection)
     {
         Factory = factory;
         Keyboards = keyboards;
+        DatabaseConnection = databaseConnection;
     }
     
     public async Task HandleUpdate(ITelegramBotClient botClient, Update update,

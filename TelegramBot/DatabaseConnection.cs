@@ -7,14 +7,13 @@ using Redis.OM.Searching;
 using StackExchange.Redis;
 
 namespace Bot;
-class DatabaseConnection
+public class DatabaseConnection : IDatabaseConnection
 {
-    // TODO: избавиться от static, перейти на DI
-    public static RedisConnectionProvider Provider = new("redis://localhost:6379");
-    public static IRedisCollection<User> Users;
-    public static IConnectionMultiplexer ConnectionMultiplexer;
+    private RedisConnectionProvider Provider = new("redis://localhost:6379");
+    private IRedisCollection<User> Users;
+    private IConnectionMultiplexer ConnectionMultiplexer;
 
-    static DatabaseConnection()
+    private DatabaseConnection()
     {
         Users = Provider.RedisCollection<User>();
         ConnectionMultiplexer = Provider
@@ -31,7 +30,7 @@ class DatabaseConnection
         RedisSerializationSettings.JsonSerializerOptions.Converters.RemoveAt(ind);
     }
 
-    public static IEnumerable<User> PopAllUsers()
+    public IEnumerable<User> PopAllUsers()
     {
         var db = ConnectionMultiplexer.GetDatabase();
         RedisValue r;
@@ -46,25 +45,25 @@ class DatabaseConnection
         } while (!r.IsNullOrEmpty);
     }
     
-    public static User AddUserToDatabase(long chatId)
+    public User AddUserToDatabase(long chatId)
     {
         var user = new User(chatId);
         Users.Insert(user);
         return user;
     }
 
-    public static User GetUserFromDatabase(long chatId)
+    public User GetUserFromDatabase(long chatId)
     {
         var user = Users.FindById(chatId.ToString()) ?? AddUserToDatabase(chatId);
         return user;
     }
 
-    public static void UpdateUserInDatabase(User user)
+    public void UpdateUserInDatabase(User user)
     {
         Users.Insert(user);
     }
 
-    public static void RemoveUserFromDatabase(User user)
+    public void RemoveUserFromDatabase(User user)
     {
         Users.Delete(user);
     }

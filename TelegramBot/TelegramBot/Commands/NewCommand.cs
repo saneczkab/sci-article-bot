@@ -7,13 +7,15 @@ namespace Bot.TelegramBot.Commands;
 public class NewCommand : ICommand
 {
     private IKeyboards Keyboards { get; }
+    private IDatabaseConnection DatabaseConnection { get; }
     public string Command => "/new";
     public string Name => "Новый запрос";
     public string Description => "добавить запрос в рассылку";
 
-    public NewCommand(IKeyboards keyboards)
+    public NewCommand(IKeyboards keyboards, IDatabaseConnection databaseConnection)
     {
         Keyboards = keyboards;
+        DatabaseConnection = databaseConnection;
     }
 
     public async Task Execute(ITelegramBotClient botClient, User user,
