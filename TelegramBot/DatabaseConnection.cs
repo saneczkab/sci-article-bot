@@ -28,6 +28,7 @@ public class DatabaseConnection : IDatabaseConnection
             .First((a) => a.item.Type == typeof(DateTime))
             .index;
         RedisSerializationSettings.JsonSerializerOptions.Converters.RemoveAt(ind);
+        Provider.Connection.CreateIndex(typeof(User));
     }
 
     public IEnumerable<User> PopAllUsers()
@@ -72,5 +73,10 @@ public class DatabaseConnection : IDatabaseConnection
     {
         var db = ConnectionMultiplexer.GetDatabase();
         db.SetAdd("updated_users", chatId);
+    }
+    
+    public IEnumerable<User> GetAllUsers()
+    {
+        return Users.ToList();
     }
 }

@@ -6,7 +6,9 @@ namespace Bot.Models;
 [Document(StorageType = StorageType.Json, Prefixes = [":User"])]
 public class User
 {
-    [RedisIdField] public long Id { get; init; }
+    [RedisIdField]
+    [Indexed]
+    public long Id { get; init; }
 
     public List<Query> Queries { get; set; } = [];
     public HashSet<string> ShownArticlesDois { get; set; } = [];

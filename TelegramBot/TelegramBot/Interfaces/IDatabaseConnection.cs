@@ -10,4 +10,5 @@ public interface IDatabaseConnection
     public void UpdateUserInDatabase(User user);
     public void RemoveUserFromDatabase(User user);
     public void MarkUserAsUpdated(long chatId);
+    public IEnumerable<User> GetAllUsers();
 }
