@@ -1,12 +1,6 @@
-﻿using Bot.TelegramBot.Commands;
-
-using System.Diagnostics;
-using System.Text.Json;
-using Redis.OM;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
-using Ninject;
 using User = Bot.Models.User;
 using System.Text;
 using Bot.TelegramBot.Interfaces;
