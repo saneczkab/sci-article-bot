@@ -43,9 +43,7 @@ public class ArticleProcessor
         }
 
         _database.UpdateUserInDatabase(user);
-
-        // if (newArticlesFound)
-            _database.MarkUserAsUpdated(user.Id);
+        _database.MarkUserAsUpdated(user.Id);
     }
 
     public void ScheduleDailyTask(TimeSpan time)
