@@ -9,11 +9,11 @@ using StackExchange.Redis;
 namespace Bot;
 public class DatabaseConnection : IDatabaseConnection
 {
-    private RedisConnectionProvider Provider = new("redis://localhost:6379");
+    private RedisConnectionProvider Provider = new("redis://redis:6379");
     private IRedisCollection<User> Users;
     private IConnectionMultiplexer ConnectionMultiplexer;
 
-    private DatabaseConnection()
+    public DatabaseConnection()
     {
         Users = Provider.RedisCollection<User>();
         ConnectionMultiplexer = Provider
