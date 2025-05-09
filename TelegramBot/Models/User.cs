@@ -1,15 +1,8 @@
-using Redis.OM.Modeling;
-
 namespace Bot.Models;
 
-
-[Document(StorageType = StorageType.Json, Prefixes = [":User"])]
 public class User
 {
-    [RedisIdField]
-    [Indexed]
-    public long Id { get; init; }
-
+    public long Id { get; set; }
     public List<Query> Queries { get; set; } = [];
     public HashSet<string> ShownArticlesDois { get; set; } = [];
 

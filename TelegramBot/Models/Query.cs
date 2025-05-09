@@ -2,6 +2,7 @@
 
 public class Query
 {
+    public int Id { get; set; }
     public string Text { get; set; }
     public DateTime? LastSearch { get; set; } = null;
     public List<Article> NewArticles { get; set; } = [];
