@@ -9,4 +9,5 @@ public interface IDatabaseConnection
     public User GetUserFromDatabase(long chatId);
     public void UpdateUserInDatabase(User user);
     public void RemoveUserFromDatabase(User user);
+    public void MarkUserAsUpdated(long chatId);
 }

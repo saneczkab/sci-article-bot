@@ -67,4 +67,10 @@ public class DatabaseConnection : IDatabaseConnection
     {
         Users.Delete(user);
     }
+    
+    public void MarkUserAsUpdated(long chatId)
+    {
+        var db = ConnectionMultiplexer.GetDatabase();
+        db.SetAdd("updated_users", chatId);
+    }
 }
