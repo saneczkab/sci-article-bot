@@ -21,5 +21,6 @@ public class BotModule : NinjectModule
         
         Bind<MessageHandler>().ToSelf().InSingletonScope();
         Bind<LastArticlesGetter>().ToSelf().InSingletonScope();
+        Bind<ArticleProcessor>().ToSelf().InSingletonScope();
     }
 }

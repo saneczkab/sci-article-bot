@@ -15,9 +15,10 @@ public static class Bot
         _botClient = new TelegramBotClient(Token);
         var cts = new CancellationTokenSource();
         await _botClient.GetMe(cancellationToken: cts.Token);
-        
+
         var kernel = new StandardKernel(new BotModule());
         var messageHandler = kernel.Get<MessageHandler>();
+        var articleProcessor = kernel.Get<ArticleProcessor>();
 
         _botClient.StartReceiving(
             messageHandler.HandleUpdate,
@@ -25,13 +26,16 @@ public static class Bot
             new ReceiverOptions(),
             cts.Token);
 
+        articleProcessor.ScheduleDailyTask(new TimeSpan(8, 17, 0)); // UTC
+        _ = Task.Run(ArticleProcessor.BlockingRun, cts.Token);
+
         _ = Scheduler.RunWithInterval(
             TimeSpan.FromSeconds(1),
             () => messageHandler.GetNewArticles(_botClient, cts.Token));
+
         try
         {
-            Console.WriteLine("Нажмите на любую клавишу, чтобы остановить программу:");
-            Console.ReadKey(true);
+            await Task.Delay(Timeout.Infinite, cts.Token);
         }
         finally
         {
