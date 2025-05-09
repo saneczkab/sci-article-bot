@@ -26,12 +26,9 @@ public static class Bot
             new ReceiverOptions(),
             cts.Token);
 
-        articleProcessor.ScheduleDailyTask(new TimeSpan(8, 17, 0)); // UTC
+        var scanTime = new TimeSpan(4, 0, 0); // UTC
+        articleProcessor.ScheduleDailyTask(scanTime, _botClient, messageHandler);
         _ = Task.Run(ArticleProcessor.BlockingRun, cts.Token);
-
-        _ = Scheduler.RunWithInterval(
-            TimeSpan.FromSeconds(1),
-            () => messageHandler.GetNewArticles(_botClient, cts.Token));
 
         try
         {

@@ -1,6 +1,7 @@
 ﻿using Bot.Models;
 using Bot.TelegramBot.Interfaces;
 using Bot.TelegramBot;
+using Telegram.Bot;
 
 public class ArticleProcessor
 {
@@ -33,8 +34,8 @@ public class ArticleProcessor
             
             foreach (var article in filteredArticles)
             {
-                if (user.ShownArticlesDois.Contains(article.Doi))
-                    continue;
+                //if (user.ShownArticlesDois.Contains(article.Doi))
+                //    continue;
 
                 newArticlesFound = true;
                 query.NewArticles.Add(article);
@@ -46,7 +47,7 @@ public class ArticleProcessor
         _database.MarkUserAsUpdated(user.Id);
     }
 
-    public void ScheduleDailyTask(TimeSpan time)
+    public void ScheduleDailyTask(TimeSpan time, ITelegramBotClient botClient, MessageHandler messageHandler)
     {
         var now = DateTime.Now;
         var firstRun = now.Date.Add(time);
@@ -56,7 +57,11 @@ public class ArticleProcessor
         var delay = firstRun - now;
         var period = TimeSpan.FromDays(1);
 
-        _dailyTimer = new Timer(_ => HandleUsers(), null, delay, period);
+        _dailyTimer = new Timer(_ =>
+        {
+            HandleUsers();
+            messageHandler.GetNewArticles(botClient, CancellationToken.None).Wait();
+        }, null, delay, period);
     }
 
     public static void BlockingRun()
