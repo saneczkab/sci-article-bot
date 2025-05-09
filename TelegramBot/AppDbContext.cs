@@ -22,10 +22,14 @@ public class AppDbContext : DbContext
             {
                 query.HasKey(q => q.Id);
                 query.Property(q => q.Id).ValueGeneratedOnAdd();
+                
                 query.WithOwner();
                 query.Property(q => q.Text).IsRequired();
                 query.OwnsMany(q => q.NewArticles, article =>
                 {
+                    article.HasKey(a => a.Id);
+                    article.Property(a => a.Id).ValueGeneratedOnAdd(); 
+                    
                     article.Property(a => a.Title);
                     article.Property(a => a.Doi);
                     article.Property(a => a.Author);
