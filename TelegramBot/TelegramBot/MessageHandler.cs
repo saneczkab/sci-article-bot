@@ -63,39 +63,78 @@ public class MessageHandler
         return Task.CompletedTask;
     }
     
-    public async Task GetNewArticles(ITelegramBotClient botClient,
-        CancellationToken cancellationToken)
+public async Task GetNewArticles(ITelegramBotClient botClient, CancellationToken cancellationToken)
+{
+    Console.WriteLine("GetNewArticles Handling users...");
+    foreach (var user in DatabaseConnection.PopAllUsers())
     {
-        foreach (var user in DatabaseConnection.PopAllUsers())
+        Console.WriteLine($"GetNewArticles Handling user {user.Id}...");
+        var messages = new List<string>();
+        var builder = new StringBuilder();
+
+        foreach (var query in user.Queries)
         {
-            var message = new StringBuilder();
-            foreach (var query in user.Queries)
+            if (query.NewArticles.Count == 0)
             {
-                if (query.NewArticles.Count == 0)
+                var section = $"По запросу <code>{query.Text}</code> за последние сутки не найдено ни одной новой статьи.\n\n";
+                if (builder.Length + section.Length > 4000)
                 {
-                    message.Append($"По запросу <code>{query.Text}</code> не найдено ни одной статьи.\n\n");
-                    continue;
+                    messages.Add(builder.ToString());
+                    builder.Clear();
                 }
-
-                message.Append($"По запросу <code>{query.Text}</code> найдены следующие статьи:\n\n");
-                for (var i = 0; i < query.NewArticles.Count; i++)
-                    message.Append($"{i + 1}. {query.NewArticles[i]}\n\n");
-                message.Append('\n');
-
-                query.NewArticles.Clear();
+                builder.Append(section);
+                continue;
             }
-            DatabaseConnection.UpdateUserInDatabase(user);
 
+            var sectionHeader = $"По запросу <code>{query.Text}</code> найдены следующие статьи:\n\n";
+            if (builder.Length + sectionHeader.Length > 4000)
+            {
+                messages.Add(builder.ToString());
+                builder.Clear();
+            }
+            builder.Append(sectionHeader);
+
+            for (int i = 0; i < query.NewArticles.Count; i++)
+            {
+                var articleText = $"{i + 1}. {query.NewArticles[i]}\n\n";
+                if (builder.Length + articleText.Length > 4000)
+                {
+                    messages.Add(builder.ToString());
+                    builder.Clear();
+                    builder.Append($"{i + 1}. {query.NewArticles[i]}\n\n");
+                }
+                else
+                {
+                    builder.Append(articleText);
+                }
+            }
+
+            builder.Append('\n');
+            query.NewArticles.Clear();
+        }
+
+        if (builder.Length > 0)
+            messages.Add(builder.ToString());
+
+        DatabaseConnection.UpdateUserInDatabase(user);
+
+        foreach (var part in messages)
+        {
             try
             {
-                await botClient.SendMessage(chatId: user.Id, text: message.ToString(),
-                    replyMarkup: Keyboards.CommandsKeyboard, cancellationToken: cancellationToken,
+                await botClient.SendMessage(chatId: user.Id, text: part,
+                    replyMarkup: Keyboards.CommandsKeyboard,
+                    cancellationToken: cancellationToken,
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
             }
             catch (ApiRequestException apiEx) when (apiEx.ErrorCode == 403)
             {
                 DatabaseConnection.RemoveUserFromDatabase(user);
+                break;
             }
         }
     }
+    Console.WriteLine("GetNewArticles Users handled.");
+}
+
 }
