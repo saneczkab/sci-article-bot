@@ -26,7 +26,7 @@ public static class Bot
             new ReceiverOptions(),
             cts.Token);
 
-        var scanTime = new TimeSpan(3, 0, 0); // UTC
+        var scanTime = new TimeSpan(4, 0, 0); // UTC
         articleProcessor.ScheduleDailyTask(scanTime, _botClient, messageHandler);
         _ = Task.Run(ArticleProcessor.BlockingRun, cts.Token);
 
