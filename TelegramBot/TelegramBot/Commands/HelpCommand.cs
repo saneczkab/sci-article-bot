@@ -10,7 +10,7 @@ public class HelpCommand : ICommand
     private IEnumerable<ICommand> Commands { get; }
     private IKeyboards Keyboards { get; }
     
-    public string Command => "/help";
+    public string Command => "/start";
     public string Name => "Помощь";
     public string Description => "показать список доступных команд";
 
